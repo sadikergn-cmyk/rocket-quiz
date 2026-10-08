@@ -20,10 +20,25 @@ Kullanıcıyla Türkçe konuş.
    - `unity command eval '<C#>' --project-path Game` — keyfi C# çalıştır.
    - `unity recompile --project-path Game` — derle, hataları raporla.
    - `unity test Game --mode EditMode` — testler (Editor kapalıyken batch modda).
-2. **unityMCP** (CoplayDev, `http://localhost:8080/mcp`): sahne, GameObject, prefab, script,
-   konsol, ekran görüntüsü araçları. Sunucu Editor içinden başlar
-   (`Window > MCP for Unity`). Bağlı değilse CLI yolunu kullan.
+2. **UnityMCP** (CoplayDev v10.3.0, `http://127.0.0.1:8080/mcp`): sahne, GameObject, prefab,
+   script, konsol, kamera/ekran görüntüsü, test, `execute_code` araçları. Sunucu, Editor
+   açılınca kendiliğinden başlar (`MCPForUnity.AutoStartOnLoad` açık; ilk bağlantı ~1 dk
+   sürebilir). Başlamadıysa `Window > MCP for Unity > Start Server`; o da olmazsa CLI yolu.
 3. Editor kapalıysa: `unity open Game`, sonra `unity status --until-ready --project-path Game`.
+
+Pratik notlar:
+- `unity command eval` çağrılarını **Bash** aracıyla yap (PowerShell 5.1 tırnakları bozar).
+  Kod tek tırnak içinde, `return ...;` ile biter.
+- "Main thread operation timed out" = Editor içe aktarma/derleme yapıyor; `unity status
+  --until-ready` ile bekleyip yeniden dene.
+- Ekran görüntüsü: `unity command capture_game_view --save_path Screenshots/x.png` dosyayı
+  `Game/Assets/Screenshots/` altına yazar (gitignore'da). `Read` ile aç ve bak.
+- Paket ekleme: `unity command package_add --identifier <ad> --confirm true`, sonra
+  `package_status`. Kurulu ekstra paketler: Cinemachine 3.1.7, 2D paket seti. ProBuilder,
+  DOTween vb. gerektiğinde eklenir.
+- Konsoldaki `InfluenceWindowStyle.uss ... Unsupported selector format` hataları 2D Animation
+  paketinden gelir, zararsızdır; yok say.
+- Build modülleri kurulu: Windows (Mono + IL2CPP), WebGL, Android.
 
 ## Kurallar
 

@@ -1,0 +1,1392 @@
+{
+ "questions": [
+  {
+   "prompt": "Güneş Sistemi'nden bir gezegen söyle.",
+   "answers": [
+    {
+     "text": "Mars",
+     "percent": 26,
+     "aliases": [
+      "Merih"
+     ]
+    },
+    {
+     "text": "Dünya",
+     "percent": 22,
+     "aliases": [
+      "Yerküre"
+     ]
+    },
+    {
+     "text": "Jüpiter",
+     "percent": 16,
+     "aliases": [
+      "Jupiter"
+     ]
+    },
+    {
+     "text": "Satürn",
+     "percent": 14,
+     "aliases": [
+      "Saturn"
+     ]
+    },
+    {
+     "text": "Venüs",
+     "percent": 10,
+     "aliases": [
+      "Zühre"
+     ]
+    },
+    {
+     "text": "Merkür",
+     "percent": 7
+    },
+    {
+     "text": "Neptün",
+     "percent": 3.5
+    },
+    {
+     "text": "Uranüs",
+     "percent": 1.5
+    }
+   ]
+  },
+  {
+   "prompt": "Türkiye'nin bir ilini söyle.",
+   "answers": [
+    {
+     "text": "İstanbul",
+     "percent": 28
+    },
+    {
+     "text": "Ankara",
+     "percent": 21
+    },
+    {
+     "text": "İzmir",
+     "percent": 13
+    },
+    {
+     "text": "Antalya",
+     "percent": 7
+    },
+    {
+     "text": "Bursa",
+     "percent": 5
+    },
+    {
+     "text": "Adana",
+     "percent": 3.5
+    },
+    {
+     "text": "Trabzon",
+     "percent": 2.5
+    },
+    {
+     "text": "Konya",
+     "percent": 2.5
+    },
+    {
+     "text": "Gaziantep",
+     "percent": 2,
+     "aliases": [
+      "Antep"
+     ]
+    },
+    {
+     "text": "Eskişehir",
+     "percent": 1.6
+    },
+    {
+     "text": "Diyarbakır",
+     "percent": 1.4
+    },
+    {
+     "text": "Samsun",
+     "percent": 1.2
+    },
+    {
+     "text": "Mersin",
+     "percent": 1.1,
+     "aliases": [
+      "İçel"
+     ]
+    },
+    {
+     "text": "Kayseri",
+     "percent": 1
+    },
+    {
+     "text": "Muğla",
+     "percent": 0.9
+    },
+    {
+     "text": "Erzurum",
+     "percent": 0.8
+    },
+    {
+     "text": "Van",
+     "percent": 0.7
+    },
+    {
+     "text": "Şanlıurfa",
+     "percent": 0.7,
+     "aliases": [
+      "Urfa"
+     ]
+    },
+    {
+     "text": "Hatay",
+     "percent": 0.6,
+     "aliases": [
+      "Antakya"
+     ]
+    },
+    {
+     "text": "Kocaeli",
+     "percent": 0.6,
+     "aliases": [
+      "İzmit"
+     ]
+    },
+    {
+     "text": "Malatya",
+     "percent": 0.5
+    },
+    {
+     "text": "Sivas",
+     "percent": 0.5
+    },
+    {
+     "text": "Çanakkale",
+     "percent": 0.5
+    },
+    {
+     "text": "Rize",
+     "percent": 0.45
+    },
+    {
+     "text": "Mardin",
+     "percent": 0.45
+    },
+    {
+     "text": "Edirne",
+     "percent": 0.4
+    },
+    {
+     "text": "Denizli",
+     "percent": 0.4
+    },
+    {
+     "text": "Balıkesir",
+     "percent": 0.35
+    },
+    {
+     "text": "Kahramanmaraş",
+     "percent": 0.35,
+     "aliases": [
+      "Maraş"
+     ]
+    },
+    {
+     "text": "Manisa",
+     "percent": 0.3
+    },
+    {
+     "text": "Sakarya",
+     "percent": 0.3,
+     "aliases": [
+      "Adapazarı"
+     ]
+    },
+    {
+     "text": "Aydın",
+     "percent": 0.3
+    },
+    {
+     "text": "Tekirdağ",
+     "percent": 0.28
+    },
+    {
+     "text": "Ordu",
+     "percent": 0.26
+    },
+    {
+     "text": "Giresun",
+     "percent": 0.24
+    },
+    {
+     "text": "Zonguldak",
+     "percent": 0.22
+    },
+    {
+     "text": "Elazığ",
+     "percent": 0.22
+    },
+    {
+     "text": "Kars",
+     "percent": 0.22
+    },
+    {
+     "text": "Bolu",
+     "percent": 0.2
+    },
+    {
+     "text": "Afyonkarahisar",
+     "percent": 0.2,
+     "aliases": [
+      "Afyon"
+     ]
+    },
+    {
+     "text": "Nevşehir",
+     "percent": 0.2
+    },
+    {
+     "text": "Tokat",
+     "percent": 0.18
+    },
+    {
+     "text": "Isparta",
+     "percent": 0.18
+    },
+    {
+     "text": "Kütahya",
+     "percent": 0.17
+    },
+    {
+     "text": "Çorum",
+     "percent": 0.17
+    },
+    {
+     "text": "Batman",
+     "percent": 0.16
+    },
+    {
+     "text": "Sinop",
+     "percent": 0.16
+    },
+    {
+     "text": "Artvin",
+     "percent": 0.15
+    },
+    {
+     "text": "Kastamonu",
+     "percent": 0.15
+    },
+    {
+     "text": "Adıyaman",
+     "percent": 0.14
+    },
+    {
+     "text": "Ağrı",
+     "percent": 0.14
+    },
+    {
+     "text": "Amasya",
+     "percent": 0.14
+    },
+    {
+     "text": "Uşak",
+     "percent": 0.13
+    },
+    {
+     "text": "Düzce",
+     "percent": 0.13
+    },
+    {
+     "text": "Aksaray",
+     "percent": 0.12
+    },
+    {
+     "text": "Niğde",
+     "percent": 0.12
+    },
+    {
+     "text": "Yalova",
+     "percent": 0.12
+    },
+    {
+     "text": "Kırklareli",
+     "percent": 0.11
+    },
+    {
+     "text": "Burdur",
+     "percent": 0.11
+    },
+    {
+     "text": "Osmaniye",
+     "percent": 0.1
+    },
+    {
+     "text": "Erzincan",
+     "percent": 0.1
+    },
+    {
+     "text": "Yozgat",
+     "percent": 0.1
+    },
+    {
+     "text": "Karaman",
+     "percent": 0.09
+    },
+    {
+     "text": "Kırıkkale",
+     "percent": 0.09
+    },
+    {
+     "text": "Bitlis",
+     "percent": 0.09
+    },
+    {
+     "text": "Muş",
+     "percent": 0.08
+    },
+    {
+     "text": "Siirt",
+     "percent": 0.08
+    },
+    {
+     "text": "Hakkari",
+     "percent": 0.08
+    },
+    {
+     "text": "Şırnak",
+     "percent": 0.08
+    },
+    {
+     "text": "Bingöl",
+     "percent": 0.07
+    },
+    {
+     "text": "Karabük",
+     "percent": 0.07
+    },
+    {
+     "text": "Bilecik",
+     "percent": 0.07
+    },
+    {
+     "text": "Kırşehir",
+     "percent": 0.07
+    },
+    {
+     "text": "Çankırı",
+     "percent": 0.06
+    },
+    {
+     "text": "Gümüşhane",
+     "percent": 0.06
+    },
+    {
+     "text": "Bartın",
+     "percent": 0.06
+    },
+    {
+     "text": "Tunceli",
+     "percent": 0.05,
+     "aliases": [
+      "Dersim"
+     ]
+    },
+    {
+     "text": "Iğdır",
+     "percent": 0.05
+    },
+    {
+     "text": "Kilis",
+     "percent": 0.05
+    },
+    {
+     "text": "Ardahan",
+     "percent": 0.04
+    },
+    {
+     "text": "Bayburt",
+     "percent": 0.04
+    }
+   ]
+  },
+  {
+   "prompt": "Periyodik tablodan bir element söyle.",
+   "answers": [
+    {
+     "text": "Oksijen",
+     "percent": 21
+    },
+    {
+     "text": "Hidrojen",
+     "percent": 19
+    },
+    {
+     "text": "Demir",
+     "percent": 12
+    },
+    {
+     "text": "Altın",
+     "percent": 10
+    },
+    {
+     "text": "Karbon",
+     "percent": 8
+    },
+    {
+     "text": "Helyum",
+     "percent": 6
+    },
+    {
+     "text": "Azot",
+     "percent": 5,
+     "aliases": [
+      "Nitrojen"
+     ]
+    },
+    {
+     "text": "Gümüş",
+     "percent": 4
+    },
+    {
+     "text": "Bakır",
+     "percent": 3
+    },
+    {
+     "text": "Sodyum",
+     "percent": 2.5
+    },
+    {
+     "text": "Kalsiyum",
+     "percent": 2
+    },
+    {
+     "text": "Uranyum",
+     "percent": 1.6
+    },
+    {
+     "text": "Neon",
+     "percent": 1.3
+    },
+    {
+     "text": "Çinko",
+     "percent": 1.1
+    },
+    {
+     "text": "Lityum",
+     "percent": 1
+    },
+    {
+     "text": "Potasyum",
+     "percent": 0.9
+    },
+    {
+     "text": "Magnezyum",
+     "percent": 0.8
+    },
+    {
+     "text": "Platin",
+     "percent": 0.7
+    },
+    {
+     "text": "Kükürt",
+     "percent": 0.6,
+     "aliases": [
+      "Sülfür"
+     ]
+    },
+    {
+     "text": "Fosfor",
+     "percent": 0.5
+    },
+    {
+     "text": "Klor",
+     "percent": 0.5
+    },
+    {
+     "text": "Alüminyum",
+     "percent": 0.5
+    },
+    {
+     "text": "Titanyum",
+     "percent": 0.4
+    },
+    {
+     "text": "Argon",
+     "percent": 0.35
+    },
+    {
+     "text": "Cıva",
+     "percent": 0.35
+    },
+    {
+     "text": "Kurşun",
+     "percent": 0.35
+    },
+    {
+     "text": "Silisyum",
+     "percent": 0.3,
+     "aliases": [
+      "Silikon"
+     ]
+    },
+    {
+     "text": "Flor",
+     "percent": 0.3
+    },
+    {
+     "text": "Nikel",
+     "percent": 0.25
+    },
+    {
+     "text": "Kalay",
+     "percent": 0.2
+    },
+    {
+     "text": "İyot",
+     "percent": 0.2
+    },
+    {
+     "text": "Krom",
+     "percent": 0.2
+    },
+    {
+     "text": "Kobalt",
+     "percent": 0.18
+    },
+    {
+     "text": "Mangan",
+     "percent": 0.15
+    },
+    {
+     "text": "Radyum",
+     "percent": 0.15
+    },
+    {
+     "text": "Plütonyum",
+     "percent": 0.15
+    },
+    {
+     "text": "Bor",
+     "percent": 0.15
+    },
+    {
+     "text": "Tungsten",
+     "percent": 0.1,
+     "aliases": [
+      "Volfram"
+     ]
+    },
+    {
+     "text": "Berilyum",
+     "percent": 0.08
+    },
+    {
+     "text": "Arsenik",
+     "percent": 0.08
+    },
+    {
+     "text": "Kripton",
+     "percent": 0.07
+    },
+    {
+     "text": "Ksenon",
+     "percent": 0.06
+    },
+    {
+     "text": "Radon",
+     "percent": 0.06
+    },
+    {
+     "text": "Baryum",
+     "percent": 0.05
+    },
+    {
+     "text": "Sezyum",
+     "percent": 0.05
+    },
+    {
+     "text": "Galyum",
+     "percent": 0.04
+    },
+    {
+     "text": "Germanyum",
+     "percent": 0.04
+    },
+    {
+     "text": "Selenyum",
+     "percent": 0.04
+    },
+    {
+     "text": "Brom",
+     "percent": 0.04
+    },
+    {
+     "text": "Zirkonyum",
+     "percent": 0.03
+    },
+    {
+     "text": "Paladyum",
+     "percent": 0.03
+    },
+    {
+     "text": "İridyum",
+     "percent": 0.02
+    },
+    {
+     "text": "Osmiyum",
+     "percent": 0.02
+    },
+    {
+     "text": "Molibden",
+     "percent": 0.02
+    },
+    {
+     "text": "Vanadyum",
+     "percent": 0.02
+    },
+    {
+     "text": "Bizmut",
+     "percent": 0.02
+    },
+    {
+     "text": "Toryum",
+     "percent": 0.02
+    },
+    {
+     "text": "Polonyum",
+     "percent": 0.02
+    },
+    {
+     "text": "Neodimyum",
+     "percent": 0.01
+    },
+    {
+     "text": "Seryum",
+     "percent": 0.01
+    },
+    {
+     "text": "Aynştaynyum",
+     "percent": 0.01,
+     "aliases": [
+      "Einsteinium"
+     ]
+    },
+    {
+     "text": "Oganesson",
+     "percent": 0.01
+    }
+   ]
+  },
+  {
+   "prompt": "Bir Osmanlı padişahı söyle.",
+   "answers": [
+    {
+     "text": "Fatih Sultan Mehmet",
+     "percent": 27,
+     "aliases": [
+      "Fatih",
+      "II. Mehmet",
+      "2. Mehmet",
+      "İkinci Mehmet",
+      "Fatih Sultan Mehmed",
+      "II. Mehmed"
+     ]
+    },
+    {
+     "text": "Kanuni Sultan Süleyman",
+     "percent": 23,
+     "aliases": [
+      "Kanuni",
+      "Süleyman",
+      "I. Süleyman",
+      "1. Süleyman",
+      "Muhteşem Süleyman"
+     ]
+    },
+    {
+     "text": "Yavuz Sultan Selim",
+     "percent": 12,
+     "aliases": [
+      "Yavuz",
+      "I. Selim",
+      "1. Selim",
+      "Yavuz Selim"
+     ]
+    },
+    {
+     "text": "II. Abdülhamid",
+     "percent": 10,
+     "aliases": [
+      "Abdülhamid",
+      "Abdülhamit",
+      "2. Abdülhamid",
+      "II. Abdülhamit",
+      "2. Abdülhamit",
+      "Sultan Abdülhamid"
+     ]
+    },
+    {
+     "text": "Osman Gazi",
+     "percent": 8,
+     "aliases": [
+      "I. Osman",
+      "1. Osman",
+      "Osman Bey"
+     ]
+    },
+    {
+     "text": "Orhan Gazi",
+     "percent": 4,
+     "aliases": [
+      "Orhan",
+      "Orhan Bey"
+     ]
+    },
+    {
+     "text": "IV. Murad",
+     "percent": 4,
+     "aliases": [
+      "4. Murad",
+      "IV. Murat",
+      "4. Murat",
+      "Dördüncü Murat"
+     ]
+    },
+    {
+     "text": "Yıldırım Bayezid",
+     "percent": 3,
+     "aliases": [
+      "I. Bayezid",
+      "1. Bayezid",
+      "Yıldırım Beyazıt",
+      "Yıldırım"
+     ]
+    },
+    {
+     "text": "II. Mahmud",
+     "percent": 2,
+     "aliases": [
+      "2. Mahmud",
+      "II. Mahmut",
+      "2. Mahmut"
+     ]
+    },
+    {
+     "text": "Vahdettin",
+     "percent": 1.8,
+     "aliases": [
+      "VI. Mehmed",
+      "6. Mehmed",
+      "VI. Mehmet",
+      "6. Mehmet",
+      "Vahideddin"
+     ]
+    },
+    {
+     "text": "III. Selim",
+     "percent": 1.4,
+     "aliases": [
+      "3. Selim"
+     ]
+    },
+    {
+     "text": "I. Murad",
+     "percent": 1,
+     "aliases": [
+      "1. Murad",
+      "I. Murat",
+      "1. Murat",
+      "Murad Hüdavendigar"
+     ]
+    },
+    {
+     "text": "II. Bayezid",
+     "percent": 0.8,
+     "aliases": [
+      "2. Bayezid",
+      "II. Beyazıt",
+      "2. Beyazıt"
+     ]
+    },
+    {
+     "text": "Abdülmecid",
+     "percent": 0.6,
+     "aliases": [
+      "I. Abdülmecid",
+      "Abdülmecit"
+     ]
+    },
+    {
+     "text": "Abdülaziz",
+     "percent": 0.5
+    },
+    {
+     "text": "II. Murad",
+     "percent": 0.5,
+     "aliases": [
+      "2. Murad",
+      "II. Murat",
+      "2. Murat"
+     ]
+    },
+    {
+     "text": "III. Ahmed",
+     "percent": 0.4,
+     "aliases": [
+      "3. Ahmed",
+      "III. Ahmet",
+      "3. Ahmet"
+     ]
+    },
+    {
+     "text": "Genç Osman",
+     "percent": 0.4,
+     "aliases": [
+      "II. Osman",
+      "2. Osman"
+     ]
+    },
+    {
+     "text": "I. Ahmed",
+     "percent": 0.3,
+     "aliases": [
+      "1. Ahmed",
+      "I. Ahmet",
+      "1. Ahmet"
+     ]
+    },
+    {
+     "text": "Çelebi Mehmed",
+     "percent": 0.3,
+     "aliases": [
+      "I. Mehmed",
+      "1. Mehmed",
+      "Çelebi Mehmet",
+      "I. Mehmet"
+     ]
+    },
+    {
+     "text": "II. Selim",
+     "percent": 0.25,
+     "aliases": [
+      "2. Selim",
+      "Sarı Selim"
+     ]
+    },
+    {
+     "text": "III. Murad",
+     "percent": 0.2,
+     "aliases": [
+      "3. Murad",
+      "III. Murat",
+      "3. Murat"
+     ]
+    },
+    {
+     "text": "Mehmed Reşad",
+     "percent": 0.2,
+     "aliases": [
+      "V. Mehmed",
+      "5. Mehmed",
+      "Sultan Reşat",
+      "Mehmet Reşat"
+     ]
+    },
+    {
+     "text": "IV. Mehmed",
+     "percent": 0.15,
+     "aliases": [
+      "4. Mehmed",
+      "Avcı Mehmed",
+      "IV. Mehmet",
+      "Avcı Mehmet"
+     ]
+    },
+    {
+     "text": "Sultan İbrahim",
+     "percent": 0.12,
+     "aliases": [
+      "Deli İbrahim",
+      "I. İbrahim"
+     ]
+    },
+    {
+     "text": "V. Murad",
+     "percent": 0.1,
+     "aliases": [
+      "5. Murad",
+      "V. Murat",
+      "5. Murat"
+     ]
+    },
+    {
+     "text": "III. Mehmed",
+     "percent": 0.08,
+     "aliases": [
+      "3. Mehmed",
+      "III. Mehmet",
+      "3. Mehmet"
+     ]
+    },
+    {
+     "text": "I. Mahmud",
+     "percent": 0.06,
+     "aliases": [
+      "1. Mahmud",
+      "I. Mahmut"
+     ]
+    },
+    {
+     "text": "III. Mustafa",
+     "percent": 0.05,
+     "aliases": [
+      "3. Mustafa"
+     ]
+    },
+    {
+     "text": "I. Abdülhamid",
+     "percent": 0.05,
+     "aliases": [
+      "1. Abdülhamid",
+      "I. Abdülhamit"
+     ]
+    },
+    {
+     "text": "II. Mustafa",
+     "percent": 0.04,
+     "aliases": [
+      "2. Mustafa"
+     ]
+    },
+    {
+     "text": "I. Mustafa",
+     "percent": 0.04,
+     "aliases": [
+      "1. Mustafa"
+     ]
+    },
+    {
+     "text": "II. Süleyman",
+     "percent": 0.03,
+     "aliases": [
+      "2. Süleyman"
+     ]
+    },
+    {
+     "text": "II. Ahmed",
+     "percent": 0.03,
+     "aliases": [
+      "2. Ahmed",
+      "II. Ahmet"
+     ]
+    },
+    {
+     "text": "III. Osman",
+     "percent": 0.02,
+     "aliases": [
+      "3. Osman"
+     ]
+    },
+    {
+     "text": "IV. Mustafa",
+     "percent": 0.02,
+     "aliases": [
+      "4. Mustafa"
+     ]
+    }
+   ]
+  },
+  {
+   "prompt": "Bir Avrupa başkenti söyle.",
+   "answers": [
+    {
+     "text": "Paris",
+     "percent": 22
+    },
+    {
+     "text": "Londra",
+     "percent": 18,
+     "aliases": [
+      "London"
+     ]
+    },
+    {
+     "text": "Berlin",
+     "percent": 13
+    },
+    {
+     "text": "Roma",
+     "percent": 12,
+     "aliases": [
+      "Rome"
+     ]
+    },
+    {
+     "text": "Madrid",
+     "percent": 8
+    },
+    {
+     "text": "Atina",
+     "percent": 5
+    },
+    {
+     "text": "Viyana",
+     "percent": 4
+    },
+    {
+     "text": "Amsterdam",
+     "percent": 4
+    },
+    {
+     "text": "Brüksel",
+     "percent": 3
+    },
+    {
+     "text": "Lizbon",
+     "percent": 2
+    },
+    {
+     "text": "Prag",
+     "percent": 1.8
+    },
+    {
+     "text": "Budapeşte",
+     "percent": 1.4
+    },
+    {
+     "text": "Stockholm",
+     "percent": 1,
+     "aliases": [
+      "Stokholm"
+     ]
+    },
+    {
+     "text": "Oslo",
+     "percent": 0.9
+    },
+    {
+     "text": "Moskova",
+     "percent": 0.9
+    },
+    {
+     "text": "Kopenhag",
+     "percent": 0.7
+    },
+    {
+     "text": "Varşova",
+     "percent": 0.7
+    },
+    {
+     "text": "Dublin",
+     "percent": 0.5
+    },
+    {
+     "text": "Helsinki",
+     "percent": 0.45
+    },
+    {
+     "text": "Sofya",
+     "percent": 0.45
+    },
+    {
+     "text": "Kiev",
+     "percent": 0.4,
+     "aliases": [
+      "Kyiv"
+     ]
+    },
+    {
+     "text": "Bükreş",
+     "percent": 0.35
+    },
+    {
+     "text": "Belgrad",
+     "percent": 0.35
+    },
+    {
+     "text": "Saraybosna",
+     "percent": 0.3
+    },
+    {
+     "text": "Zagreb",
+     "percent": 0.25
+    },
+    {
+     "text": "Bern",
+     "percent": 0.25
+    },
+    {
+     "text": "Üsküp",
+     "percent": 0.2
+    },
+    {
+     "text": "Tiran",
+     "percent": 0.18
+    },
+    {
+     "text": "Priştine",
+     "percent": 0.12
+    },
+    {
+     "text": "Reykjavik",
+     "percent": 0.1
+    },
+    {
+     "text": "Minsk",
+     "percent": 0.1
+    },
+    {
+     "text": "Lüksemburg",
+     "percent": 0.08
+    },
+    {
+     "text": "Riga",
+     "percent": 0.08
+    },
+    {
+     "text": "Vilnius",
+     "percent": 0.07
+    },
+    {
+     "text": "Tallinn",
+     "percent": 0.07,
+     "aliases": [
+      "Talin"
+     ]
+    },
+    {
+     "text": "Bratislava",
+     "percent": 0.07
+    },
+    {
+     "text": "Lefkoşa",
+     "percent": 0.07
+    },
+    {
+     "text": "Ljubljana",
+     "percent": 0.05,
+     "aliases": [
+      "Lübliyana"
+     ]
+    },
+    {
+     "text": "Podgorica",
+     "percent": 0.04
+    },
+    {
+     "text": "Kişinev",
+     "percent": 0.04
+    },
+    {
+     "text": "Valletta",
+     "percent": 0.04,
+     "aliases": [
+      "Valetta"
+     ]
+    },
+    {
+     "text": "Monako",
+     "percent": 0.03
+    },
+    {
+     "text": "San Marino",
+     "percent": 0.03
+    },
+    {
+     "text": "Vaduz",
+     "percent": 0.02
+    },
+    {
+     "text": "Andorra la Vella",
+     "percent": 0.02,
+     "aliases": [
+      "Andorra"
+     ]
+    }
+   ]
+  },
+  {
+   "prompt": "Bir takımyıldızı söyle.",
+   "answers": [
+    {
+     "text": "Büyük Ayı",
+     "percent": 24,
+     "aliases": [
+      "Büyükayı"
+     ]
+    },
+    {
+     "text": "Orion",
+     "percent": 17,
+     "aliases": [
+      "Avcı"
+     ]
+    },
+    {
+     "text": "Küçük Ayı",
+     "percent": 12,
+     "aliases": [
+      "Küçükayı"
+     ]
+    },
+    {
+     "text": "Akrep",
+     "percent": 8
+    },
+    {
+     "text": "Aslan",
+     "percent": 7
+    },
+    {
+     "text": "Koç",
+     "percent": 5
+    },
+    {
+     "text": "Boğa",
+     "percent": 5
+    },
+    {
+     "text": "İkizler",
+     "percent": 4
+    },
+    {
+     "text": "Yengeç",
+     "percent": 3
+    },
+    {
+     "text": "Başak",
+     "percent": 3
+    },
+    {
+     "text": "Terazi",
+     "percent": 2.5
+    },
+    {
+     "text": "Yay",
+     "percent": 2.5
+    },
+    {
+     "text": "Oğlak",
+     "percent": 2
+    },
+    {
+     "text": "Kova",
+     "percent": 2
+    },
+    {
+     "text": "Balık",
+     "percent": 1.8,
+     "aliases": [
+      "Balıklar"
+     ]
+    },
+    {
+     "text": "Kraliçe",
+     "percent": 1.2,
+     "aliases": [
+      "Cassiopeia",
+      "Kassiopeia"
+     ]
+    },
+    {
+     "text": "Kuğu",
+     "percent": 0.8
+    },
+    {
+     "text": "Andromeda",
+     "percent": 0.8
+    },
+    {
+     "text": "Kanatlı At",
+     "percent": 0.5,
+     "aliases": [
+      "Pegasus"
+     ]
+    },
+    {
+     "text": "Güney Haçı",
+     "percent": 0.4,
+     "aliases": [
+      "Güneyhaçı"
+     ]
+    },
+    {
+     "text": "Çalgı",
+     "percent": 0.3,
+     "aliases": [
+      "Lir",
+      "Lyra"
+     ]
+    },
+    {
+     "text": "Kartal",
+     "percent": 0.3
+    },
+    {
+     "text": "Ejderha",
+     "percent": 0.25
+    },
+    {
+     "text": "Herkül",
+     "percent": 0.2,
+     "aliases": [
+      "Herkules"
+     ]
+    },
+    {
+     "text": "Büyük Köpek",
+     "percent": 0.2
+    },
+    {
+     "text": "Erboğa",
+     "percent": 0.15,
+     "aliases": [
+      "Centaurus"
+     ]
+    },
+    {
+     "text": "Yılancı",
+     "percent": 0.1
+    },
+    {
+     "text": "Kuzey Tacı",
+     "percent": 0.08
+    },
+    {
+     "text": "Balina",
+     "percent": 0.06
+    },
+    {
+     "text": "Tavşan",
+     "percent": 0.05
+    },
+    {
+     "text": "Kahraman",
+     "percent": 0.05,
+     "aliases": [
+      "Perseus"
+     ]
+    },
+    {
+     "text": "Arabacı",
+     "percent": 0.04
+    },
+    {
+     "text": "Çoban",
+     "percent": 0.04
+    },
+    {
+     "text": "Suyılanı",
+     "percent": 0.03
+    },
+    {
+     "text": "Karina",
+     "percent": 0.02
+    },
+    {
+     "text": "Yelken",
+     "percent": 0.02
+    }
+   ]
+  }
+ ]
+}

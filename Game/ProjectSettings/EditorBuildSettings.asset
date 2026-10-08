@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/RocketQuiz.unity
+    guid: 8f22ce3cebbb0404cb23fad71e620711
+  - enabled: 1
     path: Assets/Scenes/CoinRoller.unity
     guid: 6fac3bb78d3aa114f941e0ff38f6ffc6
   m_configObjects:

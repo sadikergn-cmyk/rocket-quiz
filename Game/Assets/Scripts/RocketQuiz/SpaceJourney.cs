@@ -84,7 +84,7 @@ public class SpaceJourney : MonoBehaviour
         float skyDay = SkyDay;
         Shader.SetGlobalVector(SunDirId, JourneyMap.SunDirection);
         Shader.SetGlobalFloat(SkyDayId, skyDay);
-        Shader.SetGlobalFloat(NebulaBlendId, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(70000f, 380000f, Altitude)));
+        Shader.SetGlobalFloat(NebulaBlendId, 0.5f * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(70000f, 380000f, Altitude)));
         Shader.SetGlobalFloat(WarpStretchId, Mathf.Clamp01(Warp));
 
         RenderSettings.ambientSkyColor = Color.Lerp(spaceAmbientSky, dayAmbientSky, skyDay);

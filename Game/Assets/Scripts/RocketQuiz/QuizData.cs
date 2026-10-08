@@ -94,11 +94,8 @@ public static class RarityTiers
 
     public static string FormatPercent(float percent)
     {
-        if (percent >= 1f)
-        {
-            return "%" + Mathf.RoundToInt(percent);
-        }
-        return "%" + percent.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
+        // Never round across a tier boundary: 1,5 must not read as 2.
+        return "%" + percent.ToString(percent >= 10f ? "0" : "0.##", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
     }
 
     public static string FormatDistance(double km)

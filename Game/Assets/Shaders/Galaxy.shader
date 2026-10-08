@@ -92,20 +92,23 @@ Shader "RocketQuiz/Galaxy"
                 float angle = atan2(p.y, p.x) + _Time.y * 0.01;
 
                 float spiral = angle * _Arms + log(max(r, 0.001)) * _Twist;
-                float arms = pow(0.5 + 0.5 * cos(spiral), 2.2);
+                float arms = pow(0.5 + 0.5 * cos(spiral), 3.4);
                 float clumps = Fbm(float2(spiral * 0.6, r * 9.0) + 3.0);
                 float dust = Fbm(p * 7.0 + clumps);
 
-                float disc = exp(-r * 3.2) * smoothstep(1.0, 0.55, r);
+                float disc = exp(-r * 4.2) * smoothstep(1.0, 0.5, r);
                 float core = exp(-r * 22.0) * 2.2 + exp(-r * 8.0) * 0.35;
 
-                float armLight = arms * disc * (0.45 + 1.3 * clumps);
+                float armLight = arms * disc * (0.2 + 1.9 * clumps * clumps * 2.0);
                 float lanes = smoothstep(0.35, 0.75, dust) * arms;
 
                 half3 color = _CoreColor.rgb * core;
                 color += _ArmColor.rgb * armLight * 2.2;
                 color += _DustColor.rgb * pow(clumps, 3.0) * arms * disc * 3.0;
                 color *= 1.0 - 0.55 * lanes * smoothstep(0.05, 0.3, r);
+
+                float grain = pow(Hash(floor(input.uv * 1500.0)), 48.0);
+                color += half3(0.9, 0.95, 1.0) * grain * (arms * 0.8 + 0.2) * disc * 14.0;
 
                 return half4(color * _Intensity * _Fade, 1.0);
             }

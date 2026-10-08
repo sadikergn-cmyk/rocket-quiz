@@ -182,7 +182,7 @@ public class LaunchDirector : MonoBehaviour
     private void Ignite(float trauma, float fovKick)
     {
         rocket.SetThrottle(1f);
-        rocket.SetSmoke(75f * journey.SkyDay);
+        rocket.SetSmoke(170f * journey.SkyDay);
         rig.AddTrauma(trauma);
         rig.KickFov(fovKick);
         juice.Punch(0.7f);
@@ -244,7 +244,7 @@ public class LaunchDirector : MonoBehaviour
         float vacuum = Mathf.InverseLerp(2f, 14f, journey.Altitude);
         rocket.SetVacuum(vacuum);
         rocket.SetThrottle(Mathf.Lerp(1f, 0.35f, Mathf.InverseLerp(0.8f, 1f, u)));
-        rocket.SetSmoke(75f * skyDay);
+        rocket.SetSmoke(170f * skyDay);
         rocket.SetStreaks(leg >= 2 ? 260f * pace : 60f * pace * skyDay);
         journey.Warp = leg == 4 ? pace : (leg == 3 ? 0.55f * pace * pace : 0f);
 

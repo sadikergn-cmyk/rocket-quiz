@@ -387,7 +387,7 @@ public static partial class RocketQuizSceneBuilder
         ParticleSystem.ColorOverLifetimeModule colorModule = system.colorOverLifetime;
         colorModule.enabled = true;
         colorModule.color = MakeGradient(
-            new Color(1.8f, 1.2f, 0.7f), 0.85f,
+            new Color(1.15f, 1.0f, 0.85f), 0.6f,
             new Color(0.92f, 0.90f, 0.88f), 0.7f,
             new Color(0.8f, 0.8f, 0.82f), 0f);
 
@@ -554,9 +554,9 @@ public static partial class RocketQuizSceneBuilder
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.startLifetime = new ParticleSystem.MinMaxCurve(1.8f, 3.2f);
         main.startSpeed = new ParticleSystem.MinMaxCurve(70f, 130f);
-        main.startSize = new ParticleSystem.MinMaxCurve(5f, 9f);
+        main.startSize = new ParticleSystem.MinMaxCurve(4f, 7f);
         main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-        main.maxParticles = 420;
+        main.maxParticles = 700;
 
         ParticleSystem.EmissionModule emission = system.emission;
         emission.rateOverTime = 0f;
@@ -570,7 +570,7 @@ public static partial class RocketQuizSceneBuilder
         ParticleSystem.ColorOverLifetimeModule colorModule = system.colorOverLifetime;
         colorModule.enabled = true;
         colorModule.color = MakeGradient(
-            new Color(2.4f, 1.3f, 0.5f), 0.9f,
+            new Color(1.25f, 0.95f, 0.7f), 0.55f,
             new Color(0.95f, 0.93f, 0.90f), 0.6f,
             new Color(0.78f, 0.78f, 0.80f), 0f);
 
@@ -579,7 +579,7 @@ public static partial class RocketQuizSceneBuilder
         size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 0.7f, 1f, 4.2f));
 
         var renderer = go.GetComponent<ParticleSystemRenderer>();
-        renderer.sharedMaterial = ParticleMaterial("SmokeParticle", false, 1.4f);
+        renderer.sharedMaterial = ParticleMaterial("SmokeParticle", false, 1f);
         return system;
     }
 

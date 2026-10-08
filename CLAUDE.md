@@ -59,7 +59,28 @@ Pratik notlar:
   Asset Store dosyalarını herkese açık depoya koyma. 3D model gerekiyorsa `blender` MCP.
 - Unity API'sinden emin değilsen `context7` MCP veya `unity docs <konu>` ile doğrula.
 
-## Mevcut oyun: CoinRoller
+## Ana oyun: RocketQuiz (mobil, dikey)
+
+- Tasarım: tek soru, çok doğru cevap; oyuncu cevabı yazar. Cevabı ne kadar az kişi verdiyse
+  roket o kadar uzağa gider (5 kademe: uzayın sınırı, yörünge, Ay, Satürn, Andromeda).
+  Hedef: üst seviye iOS/Android telefon, dikey ekran, fotogerçekçi sinematik stil.
+- Sahne: `Game/Assets/Scenes/RocketQuiz.unity`. Koddan üretilir: `Tools > Build RocketQuiz
+  Scene` veya `unity command eval 'return RocketQuizSceneBuilder.Build();'`
+  (`Assets/Editor/RocketQuizSceneBuilder*.cs`, mesh'ler `RocketQuizMeshes.cs`). Sahne, UI,
+  materyal ve mesh değişikliklerini orada yap, yeniden üret (`Assets/Generated/RocketQuiz/`).
+- Script'ler `Assets/Scripts/RocketQuiz/`: `QuizGameController` (akış), `LaunchDirector` (ödül
+  sekansı ve kamera), `SpaceJourney` + `JourneyMap` (roket sabit, dünya hareket eder; uzay 1
+  birim = 6,371 km, ikinci kamera ile yığılır), `RocketVisual`, `JuiceDirector`, `AudioDirector`
+  (sesler sentezlenir), `QuizUI`, `AnswerMatcher`.
+- Shader'lar `Assets/Shaders/` (elle yazılmış HLSL; VFX Graph ve Shader Graph kullanma, mobil).
+- Sorular: `Assets/Resources/RocketQuiz/questions.json`. Yüzdeler şimdilik örnek veridir.
+  Kademe eşikleri `RarityTiers.FromPercent` içinde (%20 / %10 / %5 / %2).
+- Dokular Solar System Scope, CC BY 4.0; yeni dış dosya eklersen `CREDITS.md`'yi güncelle.
+- Ekran görüntüsünden önce `unity command eval 'return GameViewUtil.SetPortrait();'` ile Game
+  penceresini 1080x1920 yap; `capture_game_view --width 540 --height 960` kullan.
+- Testler: `Assets/Tests/PlayMode/RocketQuizTests.cs`.
+
+## Eski örnek oyun: CoinRoller
 
 - Sahne: `Game/Assets/Scenes/CoinRoller.unity`. Koddan üretilir: `Tools > Build CoinRoller
   Scene` veya `unity command eval 'return CoinRollerSceneBuilder.Build();'`

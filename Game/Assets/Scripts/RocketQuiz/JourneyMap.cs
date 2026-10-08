@@ -27,7 +27,7 @@ public static class JourneyMap
     public const float SaturnRingRadius = 8200f;
 
     public static readonly Vector3 GalaxyCenter = new Vector3(-90000f, 700000f, 90000f);
-    public const float GalaxySize = 620000f;
+    public const float GalaxySize = 300000f;
 
     // Altitude (units) where each rarity tier ends its flight.
     public static readonly float[] TierAltitude = { 16f, 160f, 3760f, 50000f, 430000f };

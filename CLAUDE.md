@@ -58,3 +58,14 @@ Pratik notlar:
 - Görsel/ses için önce ücretsiz CC0 kaynaklar: Kenney.nl, Quaternius, Poly Haven. Mixamo ve
   Asset Store dosyalarını herkese açık depoya koyma. 3D model gerekiyorsa `blender` MCP.
 - Unity API'sinden emin değilsen `context7` MCP veya `unity docs <konu>` ile doğrula.
+
+## Mevcut oyun: CoinRoller
+
+- Sahne: `Game/Assets/Scenes/CoinRoller.unity`. Koddan üretilir: `Tools > Build CoinRoller
+  Scene` veya `unity command eval 'return CoinRollerSceneBuilder.Build();'`
+  (`Assets/Editor/CoinRollerSceneBuilder.cs`). Sahne düzenini orada değiştir, yeniden üret.
+- Script'ler `Assets/Scripts/` (`Game` asmdef): PlayerController, Coin, GameManager, CameraFollow.
+- Testler: `Assets/Tests/PlayMode/CoinRollerTests.cs`. Çalıştırma:
+  `unity command run_tests --mode PlayMode --async_tests true`, sonra `test_status` yokla.
+- `unity command simulate_key` W/A/S/D için çalışır ama Space'i iletmez. Tuş testinde
+  `InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(Key.Space))` kullan.

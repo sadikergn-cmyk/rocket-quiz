@@ -6,6 +6,28 @@ public static class AnswerMatcher
 {
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
 
+    // Nadide (0018): an exact form (case/diacritics/aliases folded) is accepted; a close spelling is
+    // only offered back as "Bunu mu demek istediniz?".
+    public static QuizAnswer Evaluate(QuizQuestion question, string input, out bool exact)
+    {
+        exact = false;
+        QuizAnswer best = Match(question, input);
+        if (best == null)
+        {
+            return null;
+        }
+        string typed = Normalize(input);
+        exact = typed == Normalize(best.text);
+        if (!exact && best.aliases != null)
+        {
+            for (int a = 0; a < best.aliases.Length; a++)
+            {
+                if (typed == Normalize(best.aliases[a])) exact = true;
+            }
+        }
+        return best;
+    }
+
     public static QuizAnswer Match(QuizQuestion question, string input)
     {
         string typed = Normalize(input);

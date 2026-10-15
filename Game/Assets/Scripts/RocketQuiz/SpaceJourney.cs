@@ -78,7 +78,8 @@ public class SpaceJourney : MonoBehaviour
                 new Vector3(0f, Altitude, 0f) + near.position / metresPerUnit,
                 near.rotation);
             spaceCamera.fieldOfView = nearCamera.fieldOfView;
-            spaceCamera.nearClipPlane = Mathf.Clamp(Altitude * 0.05f, 0.2f, 2000f);
+            // Arrival stations sit far up the axis with their planet close by, so the near plane stays small.
+            spaceCamera.nearClipPlane = Mathf.Clamp(Altitude * 0.05f, 0.2f, 10f);
         }
 
         float skyDay = SkyDay;

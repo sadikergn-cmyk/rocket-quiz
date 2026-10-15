@@ -208,6 +208,26 @@ public class RocketVisual : MonoBehaviour
         ApplyExhaust();
     }
 
+    // Jumps straight to a staging state (skip / reduced motion): dropped parts vanish, no drift.
+    public void SnapToStage(int targetStage, bool fairingOff)
+    {
+        StopAllCoroutines();
+        if (targetStage >= 1) stage1.gameObject.SetActive(false);
+        if (targetStage >= 2) stage2.gameObject.SetActive(false);
+        if (fairingOff || targetStage >= 2)
+        {
+            fairingLeft.gameObject.SetActive(false);
+            fairingRight.gameObject.SetActive(false);
+            FairingAttached = false;
+            for (int i = 0; i < solarPanels.Length; i++)
+            {
+                solarPanels[i].localScale = Vector3.one;
+            }
+        }
+        stage = targetStage;
+        ApplyExhaust();
+    }
+
     private void ApplyExhaust()
     {
         if (block == null) return;

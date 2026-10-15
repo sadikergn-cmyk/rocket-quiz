@@ -1,5 +1,8 @@
 # RocketQuiz: Görsel ve UX Geliştirme Planı
 
+> **Güncelleme (2026-10-15):** Oyun kuralları artık Nadide'ninkiler. Kademeler, puanlama, soru
+> sayısı/süresi ve ekranda mesafe gösterimi için `NADIDE_UYUM_TASARIMI.md` bu belgenin yerine geçer.
+
 Tarih: 2026-10-15. Kaynak: oyunun mevcut WebGL sürümünün aşama aşama ekran görüntüleri, render ve UI
 kod denetimi, 6 web araştırması (grafik teknikleri, UI teknolojisi, çekirdek döngü, elde tutma,
 mobil giriş/erişilebilirlik, ödül sineması).

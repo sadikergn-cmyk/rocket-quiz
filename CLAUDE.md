@@ -59,22 +59,29 @@ Pratik notlar:
   Asset Store dosyalarını herkese açık depoya koyma. 3D model gerekiyorsa `blender` MCP.
 - Unity API'sinden emin değilsen `context7` MCP veya `unity docs <konu>` ile doğrula.
 
-## Ana oyun: RocketQuiz (mobil, dikey)
+## Ana oyun: RocketQuiz (mobil, dikey) — Nadide kurallarıyla
 
-- Tasarım: tek soru, çok doğru cevap; oyuncu cevabı yazar. Cevabı ne kadar az kişi verdiyse
-  roket o kadar uzağa gider (5 kademe: uzayın sınırı, yörünge, Ay, Satürn, Andromeda).
-  Hedef: üst seviye iOS/Android telefon, dikey ekran, fotogerçekçi sinematik stil.
+- **Kurallar Nadide'nin** (bağlayıcı, `docs/NADIDE_UYUM_TASARIMI.md`): günde 5 soru, soru başına
+  30 sn, yanlış cevapta süre içinde yeniden deneme, "Bunu mu demek istediniz?" onayı, 8 gezegen
+  durağı (Merkür 5 … Neptün 100) + Ay tuzağı + süre dolunca "Güneş'te kaldın" (0). Puan gün içinde
+  tahmini, gece yarısı kesinleşir; ertesi gün "kesinleşti" kartı. **Ekranda mesafe sayısı yok**
+  (km, AU, ışık yılı, irtifa). Ad ve görünüm RocketQuiz. Okyanus/derinlik/Krillion dili yok.
+- Kademeyi sunucu belirler. İstemci yalnız `IGameSession` ile konuşur
+  (`Assets/Scripts/RocketQuiz/Game/`): `MockGameSession` çevrimdışı/Editor/testler için yerel
+  `questions.json`'dan oynar; gerçek Nadide oturumu `Assets/Scripts/RocketQuiz/Net/` altında
+  (**"Unity oyunu GitHub senkronizasyonu" oturumunun alanı**, `QuizGameController.SessionFactory`
+  ile takılır).
+- Duraklar, renkler, metinler: `RqStops`. Durak haritası (Güneş solda): `OrbitMap`. Ekranlar
+  (intro, Hangar, öneri, durak kartı, sonuç, kesinleşti): `GameScreens`. Soru kartı + HUD: `QuizUI`.
+  Uçuş (kalkış → harita → varış istasyonu, dokununca atla, hareketi azalt): `LaunchDirector`.
+  İstasyonlar ve gezegen konumları: `JourneyMap` (iç ölçek; ekranda gösterilmez).
 - Sahne: `Game/Assets/Scenes/RocketQuiz.unity`. Koddan üretilir: `Tools > Build RocketQuiz
   Scene` veya `unity command eval 'return RocketQuizSceneBuilder.Build();'`
-  (`Assets/Editor/RocketQuizSceneBuilder*.cs`, mesh'ler `RocketQuizMeshes.cs`). Sahne, UI,
-  materyal ve mesh değişikliklerini orada yap, yeniden üret (`Assets/Generated/RocketQuiz/`).
-- Script'ler `Assets/Scripts/RocketQuiz/`: `QuizGameController` (akış), `LaunchDirector` (ödül
-  sekansı ve kamera), `SpaceJourney` + `JourneyMap` (roket sabit, dünya hareket eder; uzay 1
-  birim = 6,371 km, ikinci kamera ile yığılır), `RocketVisual`, `JuiceDirector`, `AudioDirector`
-  (sesler sentezlenir), `QuizUI`, `AnswerMatcher`.
-- Shader'lar `Assets/Shaders/` (elle yazılmış HLSL; VFX Graph ve Shader Graph kullanma, mobil).
-- Sorular: `Assets/Resources/RocketQuiz/questions.json`. Yüzdeler şimdilik örnek veridir.
-  Kademe eşikleri `RarityTiers.FromPercent` içinde (%20 / %10 / %5 / %2).
+  (`Assets/Editor/RocketQuizSceneBuilder*.cs`; UI `.Gameplay.cs` + `.Screens.cs`, roket `.Rocket.cs`).
+- Sorular: `Assets/Resources/RocketQuiz/questions.json` (`example`, sahte oturum için `trap`).
+  Yüzdeler örnek veridir; yalnız `MockGameSession` kullanır.
+- Hata ayıklama: PlayerPrefs `rq.introSeen` (intro), `rq.finalDemo`=1 (örnek kesinleşti kartı),
+  `rq.reducedMotion`=1.
 - Dokular Solar System Scope, CC BY 4.0; yeni dış dosya eklersen `CREDITS.md`'yi güncelle.
 - Ekran görüntüsünden önce `unity command eval 'return GameViewUtil.SetPortrait();'` ile Game
   penceresini 1080x1920 yap; `capture_game_view --width 540 --height 960` kullan.

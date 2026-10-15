@@ -44,13 +44,15 @@
     },
     {
      "text": "Neptün",
-     "percent": 3.5
+     "percent": 3.5,
+     "trap": true
     },
     {
      "text": "Uranüs",
      "percent": 1.5
     }
-   ]
+   ],
+   "example": "Mars"
   },
   {
    "prompt": "Türkiye'nin bir ilini söyle.",
@@ -406,7 +408,8 @@
      "text": "Bayburt",
      "percent": 0.04
     }
-   ]
+   ],
+   "example": "İstanbul"
   },
   {
    "prompt": "Periyodik tablodan bir element söyle.",
@@ -674,7 +677,8 @@
      "text": "Oganesson",
      "percent": 0.01
     }
-   ]
+   ],
+   "example": "Oksijen"
   },
   {
    "prompt": "Bir Osmanlı padişahı söyle.",
@@ -993,7 +997,8 @@
       "4. Mustafa"
      ]
     }
-   ]
+   ],
+   "example": "Fatih Sultan Mehmet"
   },
   {
    "prompt": "Bir Avrupa başkenti söyle.",
@@ -1112,7 +1117,8 @@
     },
     {
      "text": "Bern",
-     "percent": 0.25
+     "percent": 0.25,
+     "trap": true
     },
     {
      "text": "Üsküp",
@@ -1202,7 +1208,8 @@
       "Andorra"
      ]
     }
-   ]
+   ],
+   "example": "Paris"
   },
   {
    "prompt": "Bir takımyıldızı söyle.",
@@ -1386,7 +1393,8 @@
      "text": "Yelken",
      "percent": 0.02
     }
-   ]
+   ],
+   "example": "Büyükayı"
   }
  ]
 }

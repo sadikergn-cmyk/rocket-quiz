@@ -262,14 +262,23 @@ public static partial class RocketQuizSceneBuilder
         ringMat.SetFloat("_Exposure", 1.3f);
         CreateBody("Saturn Ring", root.transform, plane, ringMat, JourneyMap.SaturnCenter, JourneyMap.SaturnRingRadius, saturnRotation);
 
-        Material galaxyMat = GetMaterial("Galaxy", "RocketQuiz/Galaxy");
-        Vector3 viewer = new Vector3(0f, JourneyMap.TierAltitude[JourneyMap.TierCount - 1], 0f);
-        Quaternion facing = Quaternion.LookRotation(viewer - JourneyMap.GalaxyCenter) * Quaternion.Euler(90f, 0f, 0f);
-        GameObject galaxyGo = CreateBody("Galaxy", root.transform, plane, galaxyMat, JourneyMap.GalaxyCenter,
-            JourneyMap.GalaxySize * 0.5f, facing * Quaternion.Euler(-48f, 25f, 0f));
+        // Nadide's outer and inner stops (0017). Andromeda is gone: the journey ends at Neptune.
+        CreateBody("Mercury", root.transform, sphere, PlanetMaterial("Mercury", "mercury.jpg", new Color(0.7f, 0.65f, 0.6f), 0.05f, 1.2f),
+            JourneyMap.MercuryCenter, JourneyMap.MercuryRadius, Quaternion.Euler(0f, 60f, 3f));
+        CreateBody("Venus", root.transform, sphere, PlanetMaterial("Venus", "venus_atmosphere.jpg", new Color(1f, 0.85f, 0.55f), 0.55f, 1.1f),
+            JourneyMap.VenusCenter, JourneyMap.VenusRadius, Quaternion.Euler(0f, 20f, 177f));
+        CreateBody("Uranus", root.transform, sphere, PlanetMaterial("Uranus", "uranus.jpg", new Color(0.55f, 0.9f, 0.95f), 0.45f, 1.25f),
+            JourneyMap.UranusCenter, JourneyMap.UranusRadius, Quaternion.Euler(0f, 30f, 98f));
+        CreateBody("Neptune", root.transform, sphere, PlanetMaterial("Neptune", "neptune.jpg", new Color(0.35f, 0.5f, 1f), 0.5f, 1.3f),
+            JourneyMap.NeptuneCenter, JourneyMap.NeptuneRadius, Quaternion.Euler(0f, 140f, 28f));
+
+        Material sunMat = GetMaterial("Sun", "RocketQuiz/Sun");
+        sunMat.SetTexture("_MainTex", LoadTexture("sun.jpg"));
+        sunMat.SetFloat("_Intensity", 7f);
+        CreateBody("Sun", root.transform, sphere, sunMat, JourneyMap.SunCenter, JourneyMap.SunRadius, Quaternion.identity);
 
         SetLayerRecursive(root, spaceLayer);
-        return galaxyGo.GetComponent<Renderer>();
+        return null;
     }
 
     private static Material PlanetMaterial(string name, string texture, Color atmoColor, float atmoStrength, float exposure)

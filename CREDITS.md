@@ -18,6 +18,11 @@ değiştirilmemiştir.
 | `saturn.jpg` | `2k_saturn.jpg` |
 | `saturn_ring.png` | `2k_saturn_ring_alpha.png` |
 | `stars_milky_way.jpg` | `2k_stars_milky_way.jpg` |
+| `mercury.jpg` | `2k_mercury.jpg` |
+| `venus_atmosphere.jpg` | `2k_venus_atmosphere.jpg` |
+| `uranus.jpg` | `2k_uranus.jpg` |
+| `neptune.jpg` | `2k_neptune.jpg` |
+| `sun.jpg` | `2k_sun.jpg` |
 
 Solar System Scope bu dokuları NASA görev verilerine dayanarak hazırlamıştır.
 

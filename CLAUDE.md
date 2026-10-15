@@ -80,6 +80,27 @@ Pratik notlar:
   penceresini 1080x1920 yap; `capture_game_view --width 540 --height 960` kullan.
 - Testler: `Assets/Tests/PlayMode/RocketQuizTests.cs`.
 
+## GitHub ve web sürümü
+
+- Depo: https://github.com/sadikergn-cmyk/rocket-quiz (herkese açık). Oyun:
+  https://sadikergn-cmyk.github.io/rocket-quiz/
+- `main`'e push → `.github/workflows/webgl-pages.yml` WebGL derler (game-ci, Docker) ve `gh-pages` dalına
+  yayınlar. Sadece `Game/Assets`, `Game/Packages`, `Game/ProjectSettings` değişince çalışır;
+  elle: `gh workflow run "WebGL to Pages"`. Durum: `gh run list`, hata: `gh run view --log-failed`.
+- Derleme yöntemi `WebGLBuilder.Build` (`Assets/Editor/WebGLBuilder.cs`): yalnızca
+  `RocketQuiz.unity`, Gzip + Decompression Fallback (Pages `Content-Encoding` gönderemez),
+  şablon `Assets/WebGLTemplates/RocketQuiz/`. Yerelde: `Tools > Build RocketQuiz WebGL`, sonra
+  `python tools/serve_webgl.py` (http://localhost:8090).
+- CI sahneyi yeniden üretmez; derlenen şey depodaki `RocketQuiz.unity`'dir. Builder kodunu
+  değiştirdiysen sahneyi Editor'de yeniden üretip onu da commit'le.
+- **Bulut oturumu (Unity Editor yok):** `unity` CLI ve MCP çalışmaz. Yalnızca C#/shader/JSON
+  düzenle, `*.unity`/`*.mat`/`*.asset` dosyalarına dokunma. Derleme kontrolü = CI çalışması;
+  push'tan sonra `gh run watch` ile bekle, hata varsa logdan düzelt. Görsel doğrulamayı Pages
+  linkinde yap. Sahne/materyal gerektiren işleri yerel oturuma bırak.
+- WebGL'de URP Lit görünmüyor; materyaller `RocketQuiz/Surface` shader'ını kullanır
+  (`Assets/Shaders/Surface.shader`).
+- Secrets: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` (kullanıcı ekler).
+
 ## Eski örnek oyun: CoinRoller
 
 - Sahne: `Game/Assets/Scenes/CoinRoller.unity`. Koddan üretilir: `Tools > Build CoinRoller

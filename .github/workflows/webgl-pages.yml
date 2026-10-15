@@ -1,0 +1,75 @@
+# Builds RocketQuiz for WebGL on every push to main and publishes it to GitHub Pages.
+# Needs repository secrets UNITY_LICENSE (contents of Unity_lic.ulf), UNITY_EMAIL, UNITY_PASSWORD.
+# Pages serves the gh-pages branch; each deploy replaces it with a single commit so the repo
+# does not grow with every build.
+name: WebGL to Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Game/Assets/**"
+      - "Game/Packages/**"
+      - "Game/ProjectSettings/**"
+      - ".github/workflows/webgl-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: webgl-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+
+      - uses: actions/checkout@v4
+
+      # LFS bandwidth is limited (1 GB/month on free plans), so cache the LFS objects.
+      - name: List LFS objects
+        id: lfs
+        run: echo "hash=$(git lfs ls-files -l | cut -d' ' -f1 | sort | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ steps.lfs.outputs.hash }}
+
+      - name: Pull LFS objects
+        run: git lfs pull
+
+      - uses: actions/cache@v4
+        with:
+          path: Game/Library
+          key: Library-WebGL-${{ hashFiles('Game/Assets/**', 'Game/Packages/**', 'Game/ProjectSettings/**') }}
+          restore-keys: |
+            Library-WebGL-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Game
+          targetPlatform: WebGL
+          buildMethod: WebGLBuilder.Build
+          buildsPath: build
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/WebGL/WebGL
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: "WebGL build ${{ github.sha }}"

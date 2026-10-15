@@ -111,3 +111,7 @@ InitTestScene*.unity*
 # Claude dogrulama ekran goruntuleri
 /Assets/Screenshots/
 /Assets/Screenshots.meta
+
+# Performance test package writes these into Resources (would ship in builds)
+/[Aa]ssets/[Rr]esources/PerformanceTestRun*.json
+/[Aa]ssets/[Rr]esources/PerformanceTestRun*.json.meta

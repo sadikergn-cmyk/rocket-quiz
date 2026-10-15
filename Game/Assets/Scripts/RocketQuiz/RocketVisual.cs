@@ -6,6 +6,8 @@ public class RocketVisual : MonoBehaviour
 {
     private static readonly int ThrottleId = Shader.PropertyToID("_Throttle");
     private static readonly int VacuumId = Shader.PropertyToID("_Vacuum");
+    private static readonly int EngineLightPosId = Shader.PropertyToID("_EngineLightPos");
+    private static readonly int EngineLightColorId = Shader.PropertyToID("_EngineLightColor");
 
     [SerializeField] private Transform stage1;
     [SerializeField] private Transform stage2;
@@ -199,8 +201,11 @@ public class RocketVisual : MonoBehaviour
 
         if (engineLight != null)
         {
-            engineLight.intensity = throttle * Mathf.Lerp(900f, 120f, vacuum);
-            engineLight.enabled = throttle > 0.001f && stage == 0;
+            // The glow only matters near the ground, where it lights the pad and the airframe.
+            float glow = stage == 0 ? throttle * Mathf.Lerp(5f, 0.6f, vacuum) : 0f;
+            Vector3 position = engineLight.transform.position;
+            Shader.SetGlobalVector(EngineLightPosId, new Vector4(position.x, position.y, position.z, engineLight.range));
+            Shader.SetGlobalColor(EngineLightColorId, engineLight.color * glow);
         }
     }
 

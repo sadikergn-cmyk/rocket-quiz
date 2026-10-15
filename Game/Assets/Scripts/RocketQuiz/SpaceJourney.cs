@@ -17,7 +17,7 @@ public class SpaceJourney : MonoBehaviour
     [SerializeField] private Renderer galaxy;
     [SerializeField] private Color dayAmbientSky = new Color(0.55f, 0.68f, 0.95f);
     [SerializeField] private Color dayAmbientGround = new Color(0.30f, 0.28f, 0.24f);
-    [SerializeField] private Color spaceAmbientSky = new Color(0.02f, 0.02f, 0.03f);
+    [SerializeField] private Color spaceAmbientSky = new Color(0.05f, 0.055f, 0.07f);
     [SerializeField] private Color spaceAmbientGround = new Color(0.10f, 0.16f, 0.30f);
 
     private MaterialPropertyBlock galaxyBlock;

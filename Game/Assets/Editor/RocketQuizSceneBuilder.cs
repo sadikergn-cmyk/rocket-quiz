@@ -513,6 +513,8 @@ public static partial class RocketQuizSceneBuilder
         engineLight.range = 160f;
         engineLight.intensity = 0f;
         engineLight.shadows = LightShadows.None;
+        // Only a marker for position, colour and range; RocketQuiz/Surface reads them as globals.
+        engineLight.enabled = false;
 
         ParticleSystem trail = CreateTrailSmoke(root.transform);
         ParticleSystem streaks = CreateStreaks(root.transform);
@@ -665,7 +667,8 @@ public static partial class RocketQuizSceneBuilder
 
     private static Material GetLit(string name, Color color, float metallic, float smoothness)
     {
-        Material material = GetMaterial(name, "Universal Render Pipeline/Lit");
+        // Custom surface shader instead of URP Lit: Lit fails to draw in the WebGL player.
+        Material material = GetMaterial(name, "RocketQuiz/Surface");
         material.SetColor("_BaseColor", color);
         material.SetFloat("_Metallic", metallic);
         material.SetFloat("_Smoothness", smoothness);

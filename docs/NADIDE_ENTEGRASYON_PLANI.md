@@ -7,7 +7,8 @@ Hedef repo: https://github.com/takatamakata/krillion-tr (özel, Next.js 16 + Sup
 
 | # | Karar | Sonuç |
 |---|---|---|
-| K1 | Entegrasyon modeli | **Unity tüm oyun akışının yerine geçer.** Next.js kabuk olarak kalır: intro, açılış/menü (`ui/screens/open.tsx`), `/beta` kapısı, API, paylaşım kartı (`/kart`). |
+| K1 | Entegrasyon modeli | **Unity tüm oyunun yerine geçer.** Next.js yalnızca ince kabuk: `/beta` kapısı, Unity yükleyici sayfası, API, paylaşım kartı (`/kart`). |
+| K1b | Görsel kimlik (2026-10-15) | **Nadide görüntüsü kalkar, RocketQuiz görüntüsü gelir.** Nadide'nin intro/menü *akışı* (logo intro, nasıl oynanır, Başla/Devam, günün durumu) korunur ama Unity içinde RocketQuiz tasarım sistemiyle yeniden kurulur (F3 "Hangar" ekranı). Kabukta kalan `/beta` ekranı ve yükleme ekranı da RocketQuiz token/fontlarına geçer. Nadide'nin Canvas gökyüzü, `tokens.css`, Figtree ve `open.tsx` görünümü emekliye ayrılır. |
 | K2 | Kurallar | **Nadide kuralları.** 8 gezegen (0017) + Ay tuzak kademesi + "Güneş'te kaldı"; günde 5 soru, 30 sn, tek tahmin, "bunu mu demek istedin" (0018); puan sunucuda (0008); mesafe sayısı yok (0020). |
 | K3 | Kimlik | **Mevcut yapı.** Misafir `nadide_device` çerezi + `/beta` kodu. Google/Apple girişi M3'te, ayrı iş. |
 | K4 | Süreç | **Önce ADR, sonra kod.** ADR 0021 + bu plan küçük bir doküman PR'ı olarak gider, ekip oylar; onaydan sonra kod PR'ı. |
@@ -19,8 +20,9 @@ Değişmeyen kısıt: production yalnızca Dino'nun merge commit'iyle yayına ç
 
 ```
 Tarayıcı (aynı origin: nadide-beta.vercel.app)
-├─ Next.js kabuk  ─ /beta kapısı → açılış/menü (open.tsx) → "Başla"
-│                   └─ <UnityHost> (lazy): Unity loader'ı yalnızca Başla'dan sonra yükler
+├─ Next.js kabuk  ─ /beta kapısı (RocketQuiz görünümü) → "/" = <UnityHost>
+│                   └─ <UnityHost>: RocketQuiz yükleme ekranı + Unity loader
+│                      (intro, menü, nasıl oynanır artık Unity içinde)
 │                        ├─ cevap kutusu HTML (bugünkü window.RQ köprüsü React'e taşınır)
 │                        └─ güvenli alan, görünürlük, paylaşım (Web Share) köprüleri
 ├─ Unity WebGL     ─ soru → cevap → roket sekansı → sonuç ekranı
@@ -34,10 +36,10 @@ Tarayıcı (aynı origin: nadide-beta.vercel.app)
   `public/oyun/<sürüm>/` altına indirir. `UNITY_BUILD_VERSION` env değişkeni sürümü sabitler.
 - Sıkıştırma: Vercel `Content-Encoding` gönderebildiği için Gzip/Brotli başlıkları `vercel.json`
   `headers` ile verilir, decompression fallback kapatılır (doğrulanacak).
-- 0016'daki 40 KB ilk yükleme bütçesi **kabuk için korunur**; oyun paketi ayrı, isteğe bağlı bütçe
-  (hedef ≤30 MB, ADR 0021'de yazılır).
-- Unity kaynak kodu şimdilik `sadikergn-cmyk/rocket-quiz` reposunda kalır (LFS'li dokular). Nadide
-  reposuna yalnızca köprü, indirme script'i ve ADR girer. (Açık soru S1.)
+- 0016'daki 40 KB ilk yükleme bütçesi **kabuk için korunur** (beta + yükleme ekranı); oyun paketi
+  ayrı bütçe (hedef ≤30 MB, ADR 0021'de yazılır).
+- Unity kaynak kodu `sadikergn-cmyk/rocket-quiz` reposunda kalır (LFS'li dokular, Unity araçları
+  orada kurulu). Nadide reposuna yalnızca köprü, indirme script'i ve ADR girer.
 
 ## 3. Tasarım oturumuna iletilecek uyum listesi (acil)
 
@@ -49,21 +51,25 @@ Bunlar sürmekte olan tasarım işini doğrudan etkiliyor:
 2. **km / AU / ışık yılı sayısı gösterme** (0020 §4). Telemetri hız/süre/irtifa yerine durum,
    gezegen adı, puan göstersin. İçeride ölçek kullanmak serbest, ekranda sayı yok.
 3. Okyanus/derinlik teması yok; Krillion'un kademe adı, paleti, paylaşım kartı kopyalanmaz (0007, 0020).
-4. Marka token'ları: `docs/design/system/tokens.json` (`--sky-900 #0e0b2b`, `--star #ffc94d`,
-   gezegen başına `--tier-*`). Yazı tipi: başlık Unbounded, gövde **Figtree** (Space Grotesk yerine).
-   JetBrains Mono kullanımı ekipçe onaylanmalı.
-5. Akış: 30 sn sayaç, tek tahmin, "bunu mu demek istedin" onayı, yanlışta süre içinde tekrar;
+4. Görsel kimlik **RocketQuiz'in kendisi** (K1b): `RqTheme`, Unbounded / Space Grotesk / JetBrains
+   Mono, ateşleme turuncusu kalır. Nadide token'larına geçilmez. Gezegen başına bir vurgu rengi
+   tanımlamak faydalı (sonuç ekranı, paylaşım kartı).
+5. Unity'ye yeni ekranlar: logo intro (ilk açılış), Hangar ana ekranı (Başla/Devam, günün
+   durumu, seri), "Nasıl oynanır" sayfası, ertesi gün "final" açıklaması. Nadide'nin bu ekranlardaki
+   içerik ve metinleri referans alınır, görünüm RocketQuiz olur.
+6. Akış: 30 sn sayaç, tek tahmin, "bunu mu demek istedin" onayı, yanlışta süre içinde tekrar;
    3 yakıt hakkı (fuel pips) kalkar ya da süreye dönüşür.
-6. Puan gün içinde geçici, gün sonu cron'u ile kesinleşir; ertesi gün "final" açıklaması var.
+7. Puan gün içinde geçici, gün sonu cron'u ile kesinleşir; ertesi gün "final" açıklaması var.
    Sonuç ekranı bu iki durumu göstermeli.
-7. Metinler Türkçe, `ui/strings/tr.ts` ile aynı dil.
-8. Hedef cihaz: orta segment Android'de 60 fps, reduced-motion desteği (0016).
+8. Metinler Türkçe, `ui/strings/tr.ts` ile aynı dil.
+9. Hedef cihaz: orta segment Android'de 60 fps, reduced-motion desteği (0016).
 
 ## 4. İş paketleri
 
 ### P0. Doküman PR'ı (tasarımla paralel yapılabilir)
 - [ ] `docs/decisions/0021-unity-oyun-istemcisi.md`: bağlam (0008/0016'dan sapma), karar (Unity
-      oyun istemcisi + Next.js kabuk + sunucu puanı aynen), bütçeler, geri dönüş planı (eski
+      oyun istemcisi + Next.js kabuk + sunucu puanı aynen + görsel kimliğin RocketQuiz'e geçmesi,
+      GDD 05 marka bölümünün güncellenmesi), bütçeler, geri dönüş planı (eski
       `Game.tsx` bayrakla kalır), açık sorular.
 - [ ] Bu planın Nadide repo'suna uyarlanmış özeti (`docs/` altında).
 - [ ] Dal `sado/0021-unity-istemci`, PR açılır, ekip oylaması.
@@ -78,15 +84,18 @@ Bunlar sürmekte olan tasarım işini doğrudan etkiliyor:
 - [ ] Build'den cevap verisini çıkar (Resources'taki `questions.json` yalnızca Editor mock'u).
 
 ### P2. Web kabuğu (Nadide `apps/web`)
-- [ ] `ui/unity/UnityHost.tsx`: lazy loader, ilerleme çubuğu, `window.RQ` köprüsü, cevap kutusu,
-      güvenli alan, görünürlük; `Game.tsx` yerine `NADIDE_MODES` benzeri bir bayrakla seçilir.
+- [ ] `ui/unity/UnityHost.tsx`: RocketQuiz yükleme ekranı, `window.RQ` köprüsü, cevap kutusu,
+      güvenli alan, görünürlük; `/` rotasında `Game.tsx` yerine geçer (geri dönüş için bayrak kalır).
+- [ ] `/beta` ekranını RocketQuiz görünümüne çevir (Unbounded/Space Grotesk, `RqTheme` renkleri).
+- [ ] Pratik modları (`?mod=sinirsiz|arsiv`) ilk sürümde gizlenir; Unity'ye taşınınca açılır.
 - [ ] `scripts/fetch-unity-build` + `vercel.json` başlıkları + `proxy.ts`'te `/oyun/*` davranışı.
 - [ ] Unity şablonu (`WebGLTemplates/RocketQuiz`) sadeleşir; HTML arayüzü React'e taşınır.
 - [ ] Paylaşım: Unity → jslib → Web Share API + mevcut `/kart/[gun]/[katmanlar]`.
 
-### P3. Görsel uyum (tasarım oturumu çıktısına bağlı)
+### P3. Görsel uyum ve yeni ekranlar (tasarım oturumu çıktısına bağlı)
 - [ ] 8 gezegen varış sahneleri, Ay tuzağı ve Güneş sahnesi, mesafe sayılarının kaldırılması.
-- [ ] Nadide token'ları ve Figtree ile `RqTheme` / TMP font asset'leri.
+- [ ] Logo intro, Hangar menüsü, "Nasıl oynanır", final açıklama ekranı (Unity, RocketQuiz stili).
+- [ ] Paylaşım kartı `/kart` görselinin RocketQuiz stiline çevrilmesi.
 
 ### P4. Doğrulama
 - [ ] Yerel: `npm run dev` (bellek repository'si) + `public/oyun/` içinde yerel Unity derlemesi,
@@ -110,11 +119,14 @@ Bunlar sürmekte olan tasarım işini doğrudan etkiliyor:
 - **İki istemci:** Geçişte `Game.tsx` ve Unity yan yana yaşar; sunucu API'si ortak olduğu için
   risk düşük.
 
-## 6. Açık sorular
+## 6. Kapanan sorular (2026-10-15, kullanıcı karar yetkisini devretti)
 
-- S1: Unity kaynağı `rocket-quiz` reposunda mı kalsın, yoksa `krillion-tr/apps/unity`'ye mi
-  taşınsın (LFS gerekir, mevcut mobil prototiple çakışır)?
-- S2: Release zip'leri hangi repoda? `rocket-quiz` herkese açık (token gerekmez, derleme herkese
-  açık olur); `krillion-tr` özel (Vercel'e token gerekir).
-- S3: Nadide commit'lerinde `Co-Authored-By` satırı kullanılsın mı?
-- S4: Pratik modları (sınırsız, arşiv) ve "final" açıklama ekranı ilk sürüme dahil mi?
+- S1 Unity kaynağı: **`rocket-quiz` reposunda kalır.** Unity araçları, LFS ve CLAUDE.md düzeni
+  orada; Nadide'nin 3 MB'lık reposu şişmez. `claude/admiring-thompson-s6qrbj` dalındaki mobil
+  prototip silinmez, C# API istemcisi referans alınır; ADR'de "yerini alır" diye belirtilir.
+- S2 Release zip'leri: **`rocket-quiz` Releases (herkese açık).** Vercel token'sız indirir. Puan ve
+  cevaplar sunucuda kaldığı için derlemede gizli veri yok; kaynak zaten herkese açık.
+- S3 `Co-Authored-By`: **Kalır.** Production'ı tetikleyen commit Dino'nun merge commit'idir (yazar
+  Dino, mesajında bu satır yok); PR içi commit'ler önizleme alamasa da yayını engellemez.
+- S4 İlk sürüm: **Günlük oyun (5 soru) + ertesi gün final açıklaması.** Pratik modları gizli,
+  ikinci sürümde Unity'ye taşınır.

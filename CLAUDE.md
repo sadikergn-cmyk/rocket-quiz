@@ -96,6 +96,19 @@ Pratik notlar:
   şablondan `OnWebSafeArea` ile gelir (`SafeAreaFitter`).
 - Mobil web testi: tarayıcı panelinde mobil görünüm; `type` eylemi Unity'ye tuş göndermez, `key` kullan.
 
+## Roket (görsel)
+
+- Tasarım kararları: `docs/ROKET_VE_RAMPA_TASARIMI.md`.
+- Roket kodla üretilir: `Assets/Editor/RocketQuizSceneBuilder.Rocket.cs` (geometri, malzemeler,
+  livery). Dokular `RocketQuizRocketTextures` (gürültü dokuları önbellekli; livery her derlemede
+  yeniden çizilir) → `Assets/Generated/RocketQuiz/Rocket/`.
+- Shader `RocketQuiz/Hull`: GGX + HDRI ışığı (`EnvironmentLighting` global `_EnvCube`), URP güneş
+  gölgesi, nesne uzayında prosedürel dikiş/buz/kurum/livery. Modlar: 0 gövde, 1 düz, 2 karbon,
+  3 motor çanı. Livery önü `FrontDegrees` (-56°, varsayılan fırlatma kamerasına bakar).
+- Bakış geliştirme sahnesi: `unity command eval 'return RocketQuizSceneBuilder.BuildShowcase();'`,
+  sonra `...CaptureShowcase(720, 1280);` → `Assets/Screenshots/rocket_*.png`. Build'e girmez.
+- HDRI: Poly Haven `blouberg_sunrise_2` (CC0), küp harita 256, specular konvolüsyon.
+
 ## GitHub ve web sürümü
 
 - Depo: https://github.com/sadikergn-cmyk/rocket-quiz (herkese açık). Oyun:

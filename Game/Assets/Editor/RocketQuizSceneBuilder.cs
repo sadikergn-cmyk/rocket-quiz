@@ -32,6 +32,8 @@ public static partial class RocketQuizSceneBuilder
 
         ConfigureEnvironment();
         Light sun = CreateSun();
+        ConfigureShadows(sun);
+        CreateEnvironmentLighting(0f, 1f, false);
 
         Camera spaceCamera;
         Camera nearCamera;
@@ -398,142 +400,6 @@ public static partial class RocketQuizSceneBuilder
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         renderer.sharedMaterial = ParticleMaterial("SmokeParticle", false, 1.4f);
         return system;
-    }
-
-    // ---------- rocket (metres, nozzle exit at y = 0) ----------
-
-    private static RocketVisual CreateRocket(ParticleSystem padSmoke)
-    {
-        var root = new GameObject("Rocket");
-
-        Material white = GetLit("RocketWhite", new Color(0.80f, 0.80f, 0.80f), 0.05f, 0.55f);
-        Material dark = GetLit("RocketDark", new Color(0.06f, 0.06f, 0.07f), 0.3f, 0.45f);
-        Material metal = GetLit("RocketMetal", new Color(0.42f, 0.40f, 0.38f), 0.9f, 0.62f);
-        Material gold = GetLit("ProbeGold", new Color(1.0f, 0.72f, 0.26f), 0.85f, 0.7f);
-        Material panel = GetLit("ProbePanel", new Color(0.03f, 0.06f, 0.22f), 0.6f, 0.85f);
-        Material fairingMat = GetLit("RocketFairing", new Color(0.80f, 0.80f, 0.80f), 0.05f, 0.55f);
-        fairingMat.SetFloat("_Cull", 0f);
-
-        // Stage 1
-        var stage1 = new GameObject("Stage 1");
-        stage1.transform.SetParent(root.transform, false);
-        CreatePart("Body", stage1.transform, SaveMesh(RocketQuizMeshes.Lathe("Stage1Body", new[]
-        {
-            new Vector2(0f, 3f), new Vector2(1.83f, 3f), new Vector2(1.83f, 40f), new Vector2(0f, 40f),
-        }, false)), white, Vector3.zero);
-        CreatePart("Engine Skirt", stage1.transform, SaveMesh(RocketQuizMeshes.Lathe("Stage1Skirt", new[]
-        {
-            new Vector2(0f, 2f), new Vector2(1.95f, 2f), new Vector2(1.95f, 5.6f), new Vector2(1.83f, 5.9f),
-        }, false)), dark, Vector3.zero);
-        CreatePart("Band", stage1.transform, SaveMesh(RocketQuizMeshes.Lathe("Stage1Band", new[]
-        {
-            new Vector2(1.84f, 35.5f), new Vector2(1.85f, 35.5f), new Vector2(1.85f, 40f), new Vector2(1.84f, 40f),
-        }, false)), dark, Vector3.zero);
-        Mesh bell = SaveMesh(RocketQuizMeshes.Lathe("EngineBell", new[]
-        {
-            new Vector2(0.45f, 2.4f), new Vector2(0.62f, 1.8f), new Vector2(0.92f, 1.0f), new Vector2(1.16f, 0.4f), new Vector2(1.3f, 0f),
-        }, true));
-        CreatePart("Engine Bell", stage1.transform, bell, metal, Vector3.zero);
-        for (int i = 0; i < 4; i++)
-        {
-            float angle = 90f * i;
-            GameObject fin = CreateBox("Fin " + (i + 1), stage1.transform, dark, Vector3.zero, new Vector3(2.4f, 5f, 0.14f));
-            fin.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
-            fin.transform.localPosition = fin.transform.localRotation * new Vector3(2.9f, 5f, 0f);
-        }
-
-        // Stage 2
-        var stage2 = new GameObject("Stage 2");
-        stage2.transform.SetParent(root.transform, false);
-        CreatePart("Body", stage2.transform, SaveMesh(RocketQuizMeshes.Lathe("Stage2Body", new[]
-        {
-            new Vector2(0f, 40.1f), new Vector2(1.83f, 40.1f), new Vector2(1.83f, 52f), new Vector2(0f, 52f),
-        }, false)), white, Vector3.zero);
-        CreatePart("Interstage", stage2.transform, SaveMesh(RocketQuizMeshes.Lathe("Stage2Interstage", new[]
-        {
-            new Vector2(1.84f, 40.1f), new Vector2(1.86f, 40.1f), new Vector2(1.86f, 42.8f), new Vector2(1.84f, 42.8f),
-        }, false)), dark, Vector3.zero);
-        CreatePart("Engine Bell", stage2.transform, bell, metal, new Vector3(0f, 37.5f, 0f));
-
-        // Fairing halves
-        Vector2[] fairingProfile =
-        {
-            new Vector2(1.83f, 51.6f), new Vector2(2.3f, 53f), new Vector2(2.3f, 59.5f), new Vector2(2.2f, 61.2f),
-            new Vector2(1.9f, 62.9f), new Vector2(1.4f, 64.4f), new Vector2(0.8f, 65.5f), new Vector2(0f, 66.1f),
-        };
-        GameObject fairingLeft = CreatePart("Fairing Left", root.transform,
-            SaveMesh(RocketQuizMeshes.Lathe("FairingLeft", fairingProfile, true, 24, 90f, 180f)), fairingMat, Vector3.zero);
-        GameObject fairingRight = CreatePart("Fairing Right", root.transform,
-            SaveMesh(RocketQuizMeshes.Lathe("FairingRight", fairingProfile, true, 24, 270f, 180f)), fairingMat, Vector3.zero);
-
-        // Probe
-        var probe = new GameObject("Probe");
-        probe.transform.SetParent(root.transform, false);
-        CreateBox("Bus", probe.transform, gold, new Vector3(0f, 55f, 0f), new Vector3(1.7f, 2.2f, 1.7f));
-        CreatePart("Dish", probe.transform, SaveMesh(RocketQuizMeshes.Lathe("ProbeDish", new[]
-        {
-            new Vector2(0f, 56.3f), new Vector2(0.55f, 56.36f), new Vector2(1.05f, 56.58f), new Vector2(1.45f, 56.95f),
-        }, true, 24)), fairingMat, Vector3.zero);
-        CreatePart("Probe Engine", probe.transform, bell, metal, new Vector3(0f, 52.3f, 0f)).transform.localScale = Vector3.one * 0.55f;
-        var panels = new Transform[2];
-        for (int i = 0; i < 2; i++)
-        {
-            float side = i == 0 ? -1f : 1f;
-            // Pivot at the bus so the panel unfolds outwards when scaled along X.
-            var pivot = new GameObject("Panel Pivot " + (i == 0 ? "L" : "R"));
-            pivot.transform.SetParent(probe.transform, false);
-            pivot.transform.localPosition = new Vector3(side * 0.85f, 55f, 0f);
-            CreateBox("Panel", pivot.transform, panel, new Vector3(side * 2.6f, 0f, 0f), new Vector3(5.2f, 0.07f, 1.5f));
-            panels[i] = pivot.transform;
-        }
-
-        // Plumes: unit cone hanging down from the nozzle.
-        Mesh plume = SaveMesh(RocketQuizMeshes.Lathe("Plume", new[]
-        {
-            new Vector2(1f, 0f), new Vector2(1.5f, -0.12f), new Vector2(1.7f, -0.3f), new Vector2(1.45f, -0.6f), new Vector2(0.9f, -0.85f), new Vector2(0f, -1f),
-        }, true, 32));
-        Material exhaustMat = GetMaterial("Exhaust", "RocketQuiz/Exhaust");
-        exhaustMat.SetFloat("_Intensity", 7f);
-        Material ionMat = GetMaterial("ExhaustIon", "RocketQuiz/Exhaust");
-        ionMat.SetColor("_CoreColor", new Color(0.8f, 0.95f, 1f));
-        ionMat.SetColor("_EdgeColor", new Color(0.2f, 0.55f, 1f));
-        ionMat.SetColor("_VacuumColor", new Color(0.3f, 0.65f, 1f));
-        ionMat.SetFloat("_Intensity", 9f);
-
-        Renderer exhaust1 = CreatePlume("Exhaust Stage 1", stage1.transform, plume, exhaustMat, new Vector3(0f, 0.1f, 0f), 1.25f, 62f);
-        Renderer exhaust2 = CreatePlume("Exhaust Stage 2", stage2.transform, plume, exhaustMat, new Vector3(0f, 37.6f, 0f), 1.2f, 30f);
-        Renderer exhaust3 = CreatePlume("Exhaust Probe", probe.transform, plume, ionMat, new Vector3(0f, 52.3f, 0f), 0.35f, 9f);
-
-        var lightGo = new GameObject("Engine Light");
-        lightGo.transform.SetParent(root.transform, false);
-        lightGo.transform.localPosition = new Vector3(0f, -3f, 0f);
-        var engineLight = lightGo.AddComponent<Light>();
-        engineLight.type = LightType.Point;
-        engineLight.color = new Color(1f, 0.62f, 0.3f);
-        engineLight.range = 160f;
-        engineLight.intensity = 0f;
-        engineLight.shadows = LightShadows.None;
-        // Only a marker for position, colour and range; RocketQuiz/Surface reads them as globals.
-        engineLight.enabled = false;
-
-        ParticleSystem trail = CreateTrailSmoke(root.transform);
-        ParticleSystem streaks = CreateStreaks(root.transform);
-
-        var visual = root.AddComponent<RocketVisual>();
-        SetReference(visual, "stage1", stage1.transform);
-        SetReference(visual, "stage2", stage2.transform);
-        SetReference(visual, "fairingLeft", fairingLeft.transform);
-        SetReference(visual, "fairingRight", fairingRight.transform);
-        SetReference(visual, "probe", probe.transform);
-        SetReferenceArray(visual, "solarPanels", panels);
-        SetReference(visual, "exhaustStage1", exhaust1);
-        SetReference(visual, "exhaustStage2", exhaust2);
-        SetReference(visual, "exhaustProbe", exhaust3);
-        SetReference(visual, "trailSmoke", trail);
-        SetReference(visual, "padSmoke", padSmoke);
-        SetReference(visual, "speedStreaks", streaks);
-        SetReference(visual, "engineLight", engineLight);
-        return visual;
     }
 
     private static Renderer CreatePlume(string name, Transform parent, Mesh mesh, Material material, Vector3 position, float radius, float length)

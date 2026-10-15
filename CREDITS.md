@@ -39,3 +39,12 @@ Roket, fırlatma rampası, shader'lar ve sesler bu depoda kodla üretilir; dış
 ## Kod paketleri
 
 - LitMotion (MIT): https://github.com/annulusgames/LitMotion
+
+## Poly Haven (CC0)
+
+`Game/Assets/ThirdParty/PolyHaven/`, lisans: **CC0** (https://polyhaven.com/license).
+
+| Dosya | Kaynak |
+|---|---|
+| `blouberg_sunrise_2_2k.hdr` (+ `_sky` kopyası) | https://polyhaven.com/a/blouberg_sunrise_2 |
+| `concrete_floor_worn_001_*_1k.png` | https://polyhaven.com/a/concrete_floor_worn_001 |

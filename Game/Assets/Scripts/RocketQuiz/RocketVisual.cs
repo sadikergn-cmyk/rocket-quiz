@@ -8,6 +8,8 @@ public class RocketVisual : MonoBehaviour
     private static readonly int VacuumId = Shader.PropertyToID("_Vacuum");
     private static readonly int EngineLightPosId = Shader.PropertyToID("_EngineLightPos");
     private static readonly int EngineLightColorId = Shader.PropertyToID("_EngineLightColor");
+    private static readonly int FrostId = Shader.PropertyToID("_RocketFrost");
+    private static readonly int GlowId = Shader.PropertyToID("_Glow");
 
     [SerializeField] private Transform stage1;
     [SerializeField] private Transform stage2;
@@ -22,6 +24,10 @@ public class RocketVisual : MonoBehaviour
     [SerializeField] private ParticleSystem padSmoke;
     [SerializeField] private ParticleSystem speedStreaks;
     [SerializeField] private Light engineLight;
+    [SerializeField] private Transform[] gridFins;
+    [SerializeField] private Transform[] legs;
+    [SerializeField] private Transform[] engineBells;
+    [SerializeField] private Renderer vacuumBell;
 
     private struct Pose
     {
@@ -35,9 +41,13 @@ public class RocketVisual : MonoBehaviour
     private Pose[] restPoses;
     private MaterialPropertyBlock block;
     private Vector3[] exhaustScales;
+    private MaterialPropertyBlock glowBlock;
+    private Quaternion[] bellRest;
     private float throttle;
     private float vacuum;
     private int stage;
+    private float frost = 1f;
+    private float bellGlow;
 
     // 0 = full stack, 1 = first stage dropped, 2 = probe only.
     public int Stage
@@ -52,9 +62,9 @@ public class RocketVisual : MonoBehaviour
     {
         get
         {
-            if (stage == 0) return new Vector3(0f, 33f, 0f);
-            if (stage == 1) return new Vector3(0f, 52f, 0f);
-            return new Vector3(0f, 55f, 0f);
+            if (stage == 0) return new Vector3(0f, 36f, 0f);
+            if (stage == 1) return new Vector3(0f, 57f, 0f);
+            return new Vector3(0f, 62.6f, 0f);
         }
     }
 
@@ -71,6 +81,12 @@ public class RocketVisual : MonoBehaviour
     private void Awake()
     {
         block = new MaterialPropertyBlock();
+        glowBlock = new MaterialPropertyBlock();
+        bellRest = new Quaternion[engineBells.Length];
+        for (int i = 0; i < engineBells.Length; i++)
+        {
+            bellRest[i] = engineBells[i].localRotation;
+        }
         Transform[] parts = { stage1, stage2, fairingLeft, fairingRight, probe };
         restPoses = new Pose[parts.Length];
         for (int i = 0; i < parts.Length; i++)
@@ -112,7 +128,20 @@ public class RocketVisual : MonoBehaviour
             solarPanels[i].localScale = new Vector3(0f, 1f, 1f);
         }
 
+        for (int i = 0; i < gridFins.Length; i++)
+        {
+            gridFins[i].localRotation = Quaternion.identity;
+        }
+        for (int i = 0; i < engineBells.Length; i++)
+        {
+            engineBells[i].localRotation = bellRest[i];
+        }
+
         stage = 0;
+        frost = 1f;
+        bellGlow = 0f;
+        Shader.SetGlobalFloat(FrostId, frost);
+        ApplyBellGlow();
         FairingAttached = true;
         SetThrottle(0f);
         SetVacuum(0f);
@@ -157,6 +186,7 @@ public class RocketVisual : MonoBehaviour
         if (stage != 0) return;
         stage = 1;
         StartCoroutine(DriftAway(stage1, new Vector3(0.6f, -22f, -0.4f), new Vector3(7f, 0f, 4f), 5f));
+        StartCoroutine(DeployGridFins());
         ApplyExhaust();
     }
 
@@ -206,6 +236,65 @@ public class RocketVisual : MonoBehaviour
             Vector3 position = engineLight.transform.position;
             Shader.SetGlobalVector(EngineLightPosId, new Vector4(position.x, position.y, position.z, engineLight.range));
             Shader.SetGlobalColor(EngineLightColorId, engineLight.color * glow);
+        }
+    }
+
+    private void Update()
+    {
+        bool firing = throttle > 0.001f;
+
+        // Frost sheds once the engines light and the vehicle starts moving through warm air.
+        float frostTarget = firing ? 0.2f : 1f;
+        float newFrost = Mathf.MoveTowards(frost, frostTarget, Time.deltaTime * (firing ? 0.12f : 1f));
+        if (!Mathf.Approximately(newFrost, frost))
+        {
+            frost = newFrost;
+            Shader.SetGlobalFloat(FrostId, frost);
+        }
+
+        // Thrust vector control: a few tenths of a degree of restless gimbal while firing.
+        if (stage == 0 && firing)
+        {
+            float t = Time.time;
+            for (int i = 0; i < engineBells.Length; i++)
+            {
+                float x = (Mathf.PerlinNoise(t * 0.7f, i * 3.1f) - 0.5f) * 2.4f;
+                float z = (Mathf.PerlinNoise(i * 5.3f, t * 0.7f) - 0.5f) * 2.4f;
+                engineBells[i].localRotation = bellRest[i] * Quaternion.Euler(x, 0f, z);
+            }
+        }
+
+        // The vacuum bell's niobium extension glows orange once it has been firing for a while.
+        float glowTarget = stage == 1 && firing ? 0.85f * throttle : 0f;
+        float newGlow = Mathf.MoveTowards(bellGlow, glowTarget, Time.deltaTime * 0.35f);
+        if (!Mathf.Approximately(newGlow, bellGlow))
+        {
+            bellGlow = newGlow;
+            ApplyBellGlow();
+        }
+    }
+
+    private void ApplyBellGlow()
+    {
+        if (vacuumBell == null || glowBlock == null) return;
+        glowBlock.SetFloat(GlowId, bellGlow);
+        vacuumBell.SetPropertyBlock(glowBlock);
+    }
+
+    private IEnumerator DeployGridFins()
+    {
+        yield return new WaitForSeconds(0.8f);
+        float elapsed = 0f;
+        const float duration = 1.1f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            for (int i = 0; i < gridFins.Length; i++)
+            {
+                gridFins[i].localRotation = Quaternion.Euler(90f * t, 0f, 0f);
+            }
+            yield return null;
         }
     }
 

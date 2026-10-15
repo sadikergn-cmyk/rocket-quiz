@@ -17,7 +17,7 @@ fazları F4 (fırlatma sineması), F5 (rampa görselliği) ve F6 (atmosfer/uzay)
 |---|---|
 | Siluet | **A · Modern**: tek gövde, 2 kademe, 4 ızgara kanatçık, 4 katlanır iniş bacağı, 9 motorlu 1. kademe, tek motorlu 2. kademe, iki parçalı burun kapağı (fairing). |
 | Kimlik | **Kendi markamız**: beyaz gövde, UI ile aynı ateşleme turuncusu vurgu şeridi, RocketQuiz görev arması, seri numarası. Gerçek kurum/şirket logosu yok. |
-| Üretim | **Hazır ücretsiz model** (lisansı herkese açık depoya uygun), kendi boyamamızla. Gerekirse parçalar ayrılır/kitbash. |
+| Üretim | **Güncelleme (kullanıcı kararı):** Sketchfab indirmesi yerine roket Unity içinde kodla üretilir (`RocketQuizSceneBuilder.Rocket.cs`), PBR shader `RocketQuiz/Hull`, dokular kodla (`RocketQuizRocketTextures`). Hazır model adayları (bölüm 6) yedek olarak duruyor. |
 | Gerçeklik detayları | Buzlanma + soğuk buhar (sıvı oksijen tankı), panel/perçin/kablo kanalı/uyarı etiketleri, hareketli parçalar (ızgara kanatçık açılması, motor gimbal, burun kapağı ayrılması). |
 | Saat ve ışık | **Altın saat**: alçak güneş, uzun gölgeler, turuncu-mor gökyüzü, plümde sıcak arka ışık. |
 | Konum | **Kıyı kompleksi**: deniz ufku, kumsal şeridi, sazlık; yükseldikçe kıyı çizgisi harita gibi okunur. |

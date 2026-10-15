@@ -55,6 +55,8 @@ mobil benzetim ekran görüntüsünden kaynaklanan bir yanılgı olduğu anlaş�
 
 ## 2. Alınan kararlar
 
+Roket, rampa, kalkış ve yükseliş görünümü için ayrıntılı kararlar: [ROKET_VE_RAMPA_TASARIMI.md](ROKET_VE_RAMPA_TASARIMI.md).
+
 | Konu | Karar |
 |---|---|
 | Platform | Önce web (WebGL2, GitHub Pages), sonra iOS/Android uygulaması. İki kademeli mimari. |

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Offline stand-in for Nadide's server (Editor, tests, local WebGL): today's 5 prompts from
-// Resources/RocketQuiz/questions.json, a 30 s clock, rejection with retries (0018), one frozen
+// Offline stand-in for Nadide's server (Editor, tests): today's 5 prompts from the Editor-only
+// Assets/Editor/RocketQuiz/questions.json (players get a placeholder), a 30 s clock, rejection with retries (0018), one frozen
 // "Bunu mu demek istediniz?" per prompt, and a provisional stop from the sample shares.
 public class MockGameSession : IGameSession
 {

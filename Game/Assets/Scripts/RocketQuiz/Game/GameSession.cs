@@ -120,7 +120,7 @@ public class FinalPrompt
 }
 
 // The game controller only talks to this. The Nadide network session lives in Net/ (P1);
-// MockGameSession plays offline from Resources/RocketQuiz/questions.json.
+// MockGameSession plays offline from the Editor-only Assets/Editor/RocketQuiz/questions.json.
 public interface IGameSession
 {
     void Start(Action<SessionInfo> done, Action<string> fail);

@@ -21,7 +21,7 @@ public class QuizGameController : MonoBehaviour
     }
 
     // Swapped by the Nadide integration (Net/) for the real server session.
-    public static Func<IGameSession> SessionFactory = () => new MockGameSession();
+    public static Func<IGameSession> SessionFactory = NadideSessions.CreateDefault;
 
     private const string IntroSeenKey = "rq.introSeen";
     private const string StreakKey = "rq.streak";

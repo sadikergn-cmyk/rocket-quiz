@@ -39,17 +39,27 @@ public class QuizSet
     public QuizQuestion[] questions;
 }
 
+// Sample questions for the offline MockGameSession. The real answer list lives on the Nadide server, so the file sits
+// in an Editor folder and never ships in a player build; players only get a placeholder.
 public static class QuizLibrary
 {
-    public const string ResourcePath = "RocketQuiz/questions";
+    public const string EditorPath = "Assets/Editor/RocketQuiz/questions.json";
+
+    private const string PlayerSample =
+        "{\"questions\":[{\"prompt\":\"Çevrimdışı örnek: bir renk söyle.\",\"example\":\"Mavi\",\"answers\":[" +
+        "{\"text\":\"Kırmızı\",\"percent\":30},{\"text\":\"Mavi\",\"percent\":25},{\"text\":\"Turkuaz\",\"percent\":3}]}]}";
 
     public static QuizSet Load()
     {
-        var asset = Resources.Load<TextAsset>(ResourcePath);
+#if UNITY_EDITOR
+        var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(EditorPath);
         if (asset == null)
         {
-            throw new InvalidOperationException("Quiz data not found at Resources/" + ResourcePath);
+            throw new InvalidOperationException("Quiz data not found at " + EditorPath);
         }
         return JsonUtility.FromJson<QuizSet>(asset.text);
+#else
+        return JsonUtility.FromJson<QuizSet>(PlayerSample);
+#endif
     }
 }

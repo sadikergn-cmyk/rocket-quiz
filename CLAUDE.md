@@ -78,7 +78,8 @@ Pratik notlar:
 - Sahne: `Game/Assets/Scenes/RocketQuiz.unity`. Koddan üretilir: `Tools > Build RocketQuiz
   Scene` veya `unity command eval 'return RocketQuizSceneBuilder.Build();'`
   (`Assets/Editor/RocketQuizSceneBuilder*.cs`; UI `.Gameplay.cs` + `.Screens.cs`, roket `.Rocket.cs`).
-- Sorular: `Assets/Resources/RocketQuiz/questions.json` (`example`, sahte oturum için `trap`).
+- Sorular: `Assets/Editor/RocketQuiz/questions.json` (yalnızca Editor'deki sahte oturum; build'e
+  girmez. `example`, sahte oturum için `trap`). Canlı sunucu: `Tools > RocketQuiz > Use Nadide Server`.
   Yüzdeler örnek veridir; yalnız `MockGameSession` kullanır.
 - Hata ayıklama: PlayerPrefs `rq.introSeen` (intro), `rq.finalDemo`=1 (örnek kesinleşti kartı),
   `rq.reducedMotion`=1.

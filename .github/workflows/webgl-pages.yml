@@ -25,8 +25,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      HAS_LICENSE: ${{ secrets.UNITY_LICENSE != '' }}
     steps:
+      # Until the Unity secrets exist, skip the build (publish locally with tools/publish_webgl.sh).
+      - name: Unity license missing
+        if: env.HAS_LICENSE != 'true'
+        run: echo "::notice::UNITY_LICENSE secret yok; derleme atlandi. Yerelde bash tools/publish_webgl.sh kullanin."
+
       - uses: jlumbroso/free-disk-space@v1.3.1
+        if: env.HAS_LICENSE == 'true'
         with:
           android: true
           dotnet: true
@@ -34,21 +42,26 @@ jobs:
           large-packages: false
 
       - uses: actions/checkout@v4
+        if: env.HAS_LICENSE == 'true'
 
       # LFS bandwidth is limited (1 GB/month on free plans), so cache the LFS objects.
       - name: List LFS objects
+        if: env.HAS_LICENSE == 'true'
         id: lfs
         run: echo "hash=$(git lfs ls-files -l | cut -d' ' -f1 | sort | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@v4
+        if: env.HAS_LICENSE == 'true'
         with:
           path: .git/lfs
           key: lfs-${{ steps.lfs.outputs.hash }}
 
       - name: Pull LFS objects
+        if: env.HAS_LICENSE == 'true'
         run: git lfs pull
 
       - uses: actions/cache@v4
+        if: env.HAS_LICENSE == 'true'
         with:
           path: Game/Library
           key: Library-WebGL-${{ hashFiles('Game/Assets/**', 'Game/Packages/**', 'Game/ProjectSettings/**') }}
@@ -56,6 +69,7 @@ jobs:
             Library-WebGL-
 
       - uses: game-ci/unity-builder@v4
+        if: env.HAS_LICENSE == 'true'
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -67,6 +81,7 @@ jobs:
           buildsPath: build
 
       - uses: peaceiris/actions-gh-pages@v4
+        if: env.HAS_LICENSE == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/WebGL/WebGL

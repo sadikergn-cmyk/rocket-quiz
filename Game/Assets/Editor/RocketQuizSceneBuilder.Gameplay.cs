@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -6,21 +7,21 @@ using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 // Gameplay and UI wiring for the RocketQuiz scene (portrait, 1080x1920 reference).
+// UI follows the "mission control" design system: RqTheme tokens, PanelGraphic surfaces, TMP type.
 public static partial class RocketQuizSceneBuilder
 {
-    private static Font uiFont;
-    private static Sprite panelSprite;
+    private const float CardWidth = 1080f - 2f * RqTheme.Gutter;
 
     private static void BuildGameplay(RocketVisual rocket, LaunchCameraRig rig, SpaceJourney journey, Camera nearCamera, Light sun)
     {
-        uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        panelSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd");
+        RocketQuizUiAssets.Ensure();
 
         var eventSystem = new GameObject("EventSystem");
         eventSystem.AddComponent<EventSystem>();
         eventSystem.AddComponent<InputSystemUIInputModule>();
 
-        QuizUI ui = BuildUi();
+        var bridge = new GameObject("WebBridge").AddComponent<WebBridge>();
+        QuizUI ui = BuildUi(bridge);
 
         var gameGo = new GameObject("Game");
         var audioDirector = gameGo.AddComponent<AudioDirector>();
@@ -42,11 +43,14 @@ public static partial class RocketQuizSceneBuilder
         SetReference(controller, "rig", rig);
     }
 
-    private static QuizUI BuildUi()
+    private static QuizUI BuildUi(WebBridge bridge)
     {
         var canvasGo = new GameObject("UI");
         var canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        // PanelGraphic packs its shape and colours into the extra UV channels.
+        canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1
+            | AdditionalCanvasShaderChannels.TexCoord2 | AdditionalCanvasShaderChannels.TexCoord3;
         var scaler = canvasGo.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1080f, 1920f);
@@ -56,57 +60,111 @@ public static partial class RocketQuizSceneBuilder
 
         Image veil = CreateFullscreenImage("Cloud Veil", root, new Color(1f, 1f, 1f, 0f));
 
-        Text score = CreateText("Score", root, "PUAN 0", 44, FontStyle.Bold, TextAnchor.UpperLeft, Color.white, true);
-        Place(score.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(48f, -60f), new Vector2(520f, 70f));
-        Text round = CreateText("Round", root, "SORU 1 / 6", 44, FontStyle.Bold, TextAnchor.UpperRight, new Color(0.8f, 0.88f, 1f), true);
-        Place(round.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-48f, -60f), new Vector2(520f, 70f));
+        var safeGo = new GameObject("Safe Area", typeof(RectTransform));
+        safeGo.transform.SetParent(root, false);
+        Stretch((RectTransform)safeGo.transform);
+        safeGo.AddComponent<SafeAreaFitter>();
+        Transform safe = safeGo.transform;
 
-        // Question card sits in the top half so the mobile keyboard never covers it.
-        CanvasGroup quizPanel = CreatePanel("Quiz Panel", root, new Color(0.03f, 0.05f, 0.10f, 0.80f));
-        Place((RectTransform)quizPanel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(980f, 640f));
-        Text prompt = CreateText("Prompt", quizPanel.transform, "Soru", 58, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, false);
-        Place(prompt.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(900f, 190f));
-        InputField input = CreateInput("Answer Input", quizPanel.transform);
-        Place((RectTransform)input.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -250f), new Vector2(880f, 120f));
-        Button submit = CreateButton("Submit Button", quizPanel.transform, "FIRLAT", new Color(1f, 0.42f, 0.10f), out Text submitLabel);
-        Place((RectTransform)submit.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -395f), new Vector2(880f, 120f));
-        Text feedback = CreateText("Feedback", quizPanel.transform, string.Empty, 32, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(0.75f, 0.85f, 1f), false);
-        Place(feedback.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -535f), new Vector2(900f, 90f));
+        // --- Header: score left, round right, telemetry-style labels over values.
+        TMP_Text scoreLabel = CreateTmp("Score Label", safe, "PUAN", RocketQuizUiAssets.Mono, 24f, RqTheme.Telemetry, TextAlignmentOptions.TopLeft, RocketQuizUiAssets.MonoShadow);
+        scoreLabel.characterSpacing = 18f;
+        Place(scoreLabel.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(RqTheme.Gutter, -36f), new Vector2(400f, 34f));
+        TMP_Text score = CreateTmp("Score", safe, "0", RocketQuizUiAssets.Mono, 54f, RqTheme.TextPrimary, TextAlignmentOptions.TopLeft, RocketQuizUiAssets.MonoShadow);
+        Place(score.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(RqTheme.Gutter, -70f), new Vector2(520f, 70f));
+        TMP_Text roundLabel = CreateTmp("Round Label", safe, "GÖREV", RocketQuizUiAssets.Mono, 24f, RqTheme.Telemetry, TextAlignmentOptions.TopRight, RocketQuizUiAssets.MonoShadow);
+        roundLabel.characterSpacing = 18f;
+        Place(roundLabel.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-RqTheme.Gutter, -36f), new Vector2(400f, 34f));
+        TMP_Text round = CreateTmp("Round", safe, "1/6", RocketQuizUiAssets.Mono, 54f, RqTheme.TextPrimary, TextAlignmentOptions.TopRight, RocketQuizUiAssets.MonoShadow);
+        Place(round.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-RqTheme.Gutter, -70f), new Vector2(400f, 70f));
 
-        CanvasGroup hud = CreateGroup("Flight HUD", root);
+        // --- Question card (top half; the keyboard and answer bar own the bottom).
+        CanvasGroup quizPanel = CreateCard("Quiz Panel", safe);
+        Place((RectTransform)quizPanel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -176f), new Vector2(CardWidth, 460f));
+        Transform card = quizPanel.transform;
+
+        TMP_Text questionLabel = CreateTmp("Question Label", card, "SORU 01  ·  06", RocketQuizUiAssets.Mono, 26f, RqTheme.Telemetry, TextAlignmentOptions.TopLeft, null);
+        questionLabel.characterSpacing = 10f;
+        Place(questionLabel.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(48f, -44f), new Vector2(500f, 36f));
+
+        TMP_Text fuelLabel = CreateTmp("Fuel Label", card, "YAKIT", RocketQuizUiAssets.Mono, 22f, RqTheme.TextMuted, TextAlignmentOptions.TopRight, null);
+        fuelLabel.characterSpacing = 14f;
+        Place(fuelLabel.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-226f, -48f), new Vector2(160f, 30f));
+        var pips = new PanelGraphic[3];
+        for (int i = 0; i < pips.Length; i++)
+        {
+            pips[i] = CreatePanelGraphic("Fuel " + (i + 1), card);
+            pips[i].SetStyle(RqTheme.Ignition, RqTheme.IgnitionDeep, 7f, 0f, Color.clear, 10f, new Color(1f, 0.46f, 0.12f, 0.45f));
+            Place(pips[i].rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-48f - (2 - i) * 58f, -52f), new Vector2(46f, 16f));
+        }
+
+        PanelGraphic divider = CreatePanelGraphic("Divider", card);
+        divider.SetStyle(RqTheme.Hairline, RqTheme.Hairline, 0f, 0f, Color.clear, 0f, Color.clear);
+        Place(divider.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -104f), new Vector2(CardWidth - 96f, 2f));
+
+        TMP_Text prompt = CreateTmp("Prompt", card, "Soru", RocketQuizUiAssets.Display, 54f, RqTheme.TextPrimary, TextAlignmentOptions.TopLeft, null);
+        prompt.enableAutoSizing = true;
+        prompt.fontSizeMin = 38f;
+        prompt.fontSizeMax = 56f;
+        prompt.lineSpacing = -8f;
+        Place(prompt.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(48f, -136f), new Vector2(CardWidth - 96f, 196f));
+
+        TMP_Text feedback = CreateTmp("Feedback", card, string.Empty, RocketQuizUiAssets.Body, 32f, RqTheme.TextSecondary, TextAlignmentOptions.TopLeft, null);
+        feedback.lineSpacing = 6f;
+        Place(feedback.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(48f, -340f), new Vector2(CardWidth - 96f, 96f));
+
+        // --- Answer bar (thumb zone). Hidden on the web, where an HTML field takes its place.
+        CanvasGroup answerBar = CreateGroup("Answer Bar", safe);
+        Place((RectTransform)answerBar.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 48f), new Vector2(CardWidth, 140f));
+        TMP_InputField input = CreateInput("Answer Input", answerBar.transform);
+        Place((RectTransform)input.transform, new Vector2(0f, 0f), new Vector2(0f, 0f), Vector2.zero, new Vector2(CardWidth - 316f, 140f));
+        Button submit = CreateButton("Submit Button", answerBar.transform, "FIRLAT", RqTheme.Ignition, RqTheme.IgnitionDeep, true, out TMP_Text submitLabel);
+        Place((RectTransform)submit.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(292f, 140f));
+
+        // --- Flight HUD.
+        CanvasGroup hud = CreateGroup("Flight HUD", safe);
         Stretch((RectTransform)hud.transform);
-        Text altitude = CreateText("Altitude", hud.transform, "0 m", 84, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, true);
-        Place(altitude.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -170f), new Vector2(1040f, 120f));
-        Text hint = CreateText("Speed Hint", hud.transform, "Hızlandırmak için ekrana basılı tut", 30, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.6f), true);
-        Place(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 70f), new Vector2(1000f, 60f));
+        TMP_Text altitudeLabel = CreateTmp("Altitude Label", hud.transform, "İRTİFA", RocketQuizUiAssets.Mono, 24f, RqTheme.Telemetry, TextAlignmentOptions.Top, RocketQuizUiAssets.MonoShadow);
+        altitudeLabel.characterSpacing = 20f;
+        Place(altitudeLabel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -176f), new Vector2(600f, 34f));
+        TMP_Text altitude = CreateTmp("Altitude", hud.transform, "0 m", RocketQuizUiAssets.Mono, 88f, RqTheme.TextPrimary, TextAlignmentOptions.Top, RocketQuizUiAssets.MonoShadow);
+        Place(altitude.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -210f), new Vector2(1040f, 120f));
+        TMP_Text hint = CreateTmp("Speed Hint", hud.transform, "HIZLANDIRMAK İÇİN BASILI TUT", RocketQuizUiAssets.Mono, 24f, new Color(1f, 1f, 1f, 0.6f), TextAlignmentOptions.Bottom, RocketQuizUiAssets.MonoShadow);
+        hint.characterSpacing = 12f;
+        Place(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 64f), new Vector2(1000f, 40f));
 
-        Text milestone = CreateText("Milestone", root, "YÖRÜNGE", 100, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, true);
-        Place(milestone.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 560f), new Vector2(1060f, 150f));
-        Text stamp = CreateText("Stamp", root, "DOĞRU!", 130, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, true);
-        Place(stamp.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 380f), new Vector2(1060f, 190f));
+        TMP_Text milestone = CreateTmp("Milestone", safe, "YÖRÜNGE", RocketQuizUiAssets.DisplayBlack, 92f, Color.white, TextAlignmentOptions.Center, RocketQuizUiAssets.DisplayBlackShadow);
+        Place(milestone.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 540f), new Vector2(1040f, 150f));
+        TMP_Text stamp = CreateTmp("Stamp", safe, "DOĞRU!", RocketQuizUiAssets.DisplayBlack, 112f, Color.white, TextAlignmentOptions.Center, RocketQuizUiAssets.DisplayBlackShadow);
+        Place(stamp.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 360f), new Vector2(1040f, 180f));
 
-        CanvasGroup result = CreatePanel("Result Panel", root, new Color(0.03f, 0.05f, 0.10f, 0.84f));
-        Place((RectTransform)result.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 70f), new Vector2(990f, 760f));
-        Text resultTitle = CreateText("Title", result.transform, "NADİR CEVAP", 72, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, false);
-        Place(resultTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(930f, 100f));
-        Text resultDestination = CreateText("Destination", result.transform, "Cevap", 40, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(0.82f, 0.9f, 1f), false);
-        Place(resultDestination.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(930f, 120f));
-        Text resultRarity = CreateText("Rarity", result.transform, "Yalnızca %3 bu cevabı verdi", 50, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, false);
-        Place(resultRarity.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -272f), new Vector2(930f, 80f));
-        Text resultScore = CreateText("Points", result.transform, "+0", 120, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(1f, 0.82f, 0.25f), false);
-        Place(resultScore.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -360f), new Vector2(930f, 150f));
+        // --- Result card.
+        CanvasGroup result = CreateCard("Result Panel", safe);
+        Place((RectTransform)result.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 48f), new Vector2(CardWidth, 760f));
+        Transform resultCard = result.transform;
+        TMP_Text resultTitle = CreateTmp("Title", resultCard, "NADİR CEVAP", RocketQuizUiAssets.Display, 60f, Color.white, TextAlignmentOptions.Top, null);
+        Place(resultTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -48f), new Vector2(CardWidth - 96f, 84f));
+        TMP_Text resultDestination = CreateTmp("Destination", resultCard, "Cevap", RocketQuizUiAssets.Body, 36f, RqTheme.TextSecondary, TextAlignmentOptions.Top, null);
+        Place(resultDestination.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -146f), new Vector2(CardWidth - 96f, 110f));
+        TMP_Text resultRarity = CreateTmp("Rarity", resultCard, "Yalnızca %3 bu cevabı verdi", RocketQuizUiAssets.BodyBold, 44f, RqTheme.TextPrimary, TextAlignmentOptions.Top, null);
+        Place(resultRarity.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -268f), new Vector2(CardWidth - 96f, 64f));
+        TMP_Text resultScore = CreateTmp("Points", resultCard, "+0", RocketQuizUiAssets.Mono, 112f, RqTheme.Score, TextAlignmentOptions.Center, null);
+        Place(resultScore.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -350f), new Vector2(CardWidth - 96f, 140f));
         resultScore.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        resultScore.rectTransform.anchoredPosition = new Vector2(0f, -435f);
-        Text nearMiss = CreateText("Near Miss", result.transform, string.Empty, 32, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(0.7f, 0.76f, 0.86f), false);
-        Place(nearMiss.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -520f), new Vector2(930f, 60f));
-        Button continueButton = CreateButton("Continue Button", result.transform, "SIRADAKİ SORU", new Color(0.16f, 0.52f, 1f), out Text continueLabel);
-        Place((RectTransform)continueButton.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -605f), new Vector2(880f, 120f));
+        resultScore.rectTransform.anchoredPosition = new Vector2(0f, -420f);
+        TMP_Text nearMiss = CreateTmp("Near Miss", resultCard, string.Empty, RocketQuizUiAssets.Body, 30f, RqTheme.TextMuted, TextAlignmentOptions.Top, null);
+        Place(nearMiss.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -500f), new Vector2(CardWidth - 96f, 70f));
+        Button continueButton = CreateButton("Continue Button", resultCard, "SIRADAKİ SORU", new Color(0.30f, 0.62f, 1f), new Color(0.14f, 0.36f, 0.86f), false, out TMP_Text continueLabel);
+        Place((RectTransform)continueButton.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 48f), new Vector2(CardWidth - 96f, 132f));
 
         Image flash = CreateFullscreenImage("Flash", root, new Color(1f, 1f, 1f, 0f));
 
         var ui = canvasGo.AddComponent<QuizUI>();
         SetReference(ui, "quizPanel", quizPanel);
         SetReference(ui, "promptText", prompt);
+        SetReference(ui, "questionLabel", questionLabel);
+        SetReferenceArray(ui, "fuelPips", pips);
+        SetReference(ui, "answerBar", answerBar);
         SetReference(ui, "answerInput", input);
         SetReference(ui, "submitButton", submit);
         SetReference(ui, "feedbackText", feedback);
@@ -126,6 +184,7 @@ public static partial class RocketQuizSceneBuilder
         SetReference(ui, "continueLabel", continueLabel);
         SetReference(ui, "flashImage", flash);
         SetReference(ui, "veilImage", veil);
+        SetReference(ui, "webBridge", bridge);
         return ui;
     }
 
@@ -154,13 +213,23 @@ public static partial class RocketQuizSceneBuilder
         return go.AddComponent<CanvasGroup>();
     }
 
-    private static CanvasGroup CreatePanel(string name, Transform parent, Color color)
+    private static PanelGraphic CreatePanelGraphic(string name, Transform parent)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var panel = go.AddComponent<PanelGraphic>();
+        panel.material = RocketQuizUiAssets.Panel;
+        panel.raycastTarget = false;
+        return panel;
+    }
+
+    // Glass card: navy gradient, hairline border, soft dark halo that separates it from the scene.
+    private static CanvasGroup CreateCard(string name, Transform parent)
     {
         CanvasGroup group = CreateGroup(name, parent);
-        var image = group.gameObject.AddComponent<Image>();
-        image.sprite = panelSprite;
-        image.type = Image.Type.Sliced;
-        image.color = color;
+        var panel = group.gameObject.AddComponent<PanelGraphic>();
+        panel.material = RocketQuizUiAssets.Panel;
+        panel.SetStyle(RqTheme.PanelTop, RqTheme.PanelBottom, RqTheme.RadiusCard, 2f, RqTheme.PanelBorder, 28f, new Color(0f, 0.01f, 0.04f, 0.35f));
         return group;
     }
 
@@ -175,74 +244,84 @@ public static partial class RocketQuizSceneBuilder
         return image;
     }
 
-    private static Text CreateText(string name, Transform parent, string content, int size, FontStyle style, TextAnchor anchor, Color color, bool outline)
+    private static TextMeshProUGUI CreateTmp(string name, Transform parent, string content, TMP_FontAsset font, float size, Color color, TextAlignmentOptions alignment, Material preset)
     {
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
-        var text = go.AddComponent<Text>();
-        text.font = uiFont;
+        var text = go.AddComponent<TextMeshProUGUI>();
+        text.font = font;
+        if (preset != null)
+        {
+            text.fontSharedMaterial = preset;
+        }
         text.text = content;
         text.fontSize = size;
-        text.fontStyle = style;
-        text.alignment = anchor;
         text.color = color;
+        text.alignment = alignment;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Overflow;
         text.raycastTarget = false;
-        text.horizontalOverflow = HorizontalWrapMode.Wrap;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
-        if (outline)
-        {
-            var shadow = go.AddComponent<Outline>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.75f);
-            shadow.effectDistance = new Vector2(3f, -3f);
-        }
         return text;
     }
 
-    private static Button CreateButton(string name, Transform parent, string label, Color color, out Text labelText)
+    private static Button CreateButton(string name, Transform parent, string label, Color top, Color bottom, bool glow, out TMP_Text labelText)
     {
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
-        var image = go.AddComponent<Image>();
-        image.sprite = panelSprite;
-        image.type = Image.Type.Sliced;
-        image.color = color;
+        var panel = go.AddComponent<PanelGraphic>();
+        panel.material = RocketQuizUiAssets.Panel;
+        panel.SetStyle(top, bottom, RqTheme.RadiusControl, 2f, new Color(1f, 1f, 1f, 0.28f),
+            glow ? 26f : 0f, glow ? new Color(top.r, top.g, top.b, 0.5f) : Color.clear);
         var button = go.AddComponent<Button>();
-        button.targetGraphic = image;
+        button.targetGraphic = panel;
         ColorBlock colors = button.colors;
-        colors.highlightedColor = new Color(1f, 1f, 1f, 1f);
-        colors.pressedColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+        colors.highlightedColor = Color.white;
+        colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+        colors.fadeDuration = 0.08f;
         button.colors = colors;
 
-        labelText = CreateText("Label", go.transform, label, 56, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white, false);
+        labelText = CreateTmp("Label", go.transform, label, RocketQuizUiAssets.Display, 40f, Color.white, TextAlignmentOptions.Center, null);
+        labelText.characterSpacing = 6f;
         Stretch(labelText.rectTransform);
         return button;
     }
 
-    private static InputField CreateInput(string name, Transform parent)
+    private static TMP_InputField CreateInput(string name, Transform parent)
     {
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
-        var image = go.AddComponent<Image>();
-        image.sprite = panelSprite;
-        image.type = Image.Type.Sliced;
-        image.color = new Color(0.96f, 0.97f, 1f, 1f);
+        var panel = go.AddComponent<PanelGraphic>();
+        panel.material = RocketQuizUiAssets.Panel;
+        panel.SetStyle(new Color(0.10f, 0.14f, 0.22f, 0.92f), new Color(0.06f, 0.09f, 0.16f, 0.95f), RqTheme.RadiusControl, 2f,
+            new Color(0.62f, 0.78f, 1f, 0.35f), 0f, Color.clear);
 
-        Text text = CreateText("Text", go.transform, string.Empty, 54, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.06f, 0.08f, 0.14f), false);
-        Stretch(text.rectTransform);
-        text.rectTransform.offsetMin = new Vector2(24f, 8f);
-        text.rectTransform.offsetMax = new Vector2(-24f, -8f);
-        text.supportRichText = false;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        var area = new GameObject("Text Area", typeof(RectTransform));
+        area.transform.SetParent(go.transform, false);
+        var areaRect = (RectTransform)area.transform;
+        Stretch(areaRect);
+        areaRect.offsetMin = new Vector2(36f, 10f);
+        areaRect.offsetMax = new Vector2(-36f, -10f);
+        area.AddComponent<RectMask2D>();
 
-        Text placeholder = CreateText("Placeholder", go.transform, "Cevabını yaz...", 48, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(0.06f, 0.08f, 0.14f, 0.45f), false);
+        TMP_Text placeholder = CreateTmp("Placeholder", area.transform, "Cevabını yaz…", RocketQuizUiAssets.Body, 40f, RqTheme.TextMuted, TextAlignmentOptions.Left, null);
         Stretch(placeholder.rectTransform);
+        TMP_Text text = CreateTmp("Text", area.transform, string.Empty, RocketQuizUiAssets.Body, 44f, RqTheme.TextPrimary, TextAlignmentOptions.Left, null);
+        Stretch(text.rectTransform);
+        text.textWrappingMode = TextWrappingModes.NoWrap;
 
-        var input = go.AddComponent<InputField>();
-        input.targetGraphic = image;
+        var input = go.AddComponent<TMP_InputField>();
+        input.targetGraphic = panel;
+        input.textViewport = areaRect;
         input.textComponent = text;
         input.placeholder = placeholder;
-        input.lineType = InputField.LineType.SingleLine;
+        input.fontAsset = RocketQuizUiAssets.Body;
+        input.pointSize = 44f;
+        input.lineType = TMP_InputField.LineType.SingleLine;
         input.characterLimit = 40;
+        input.caretColor = RqTheme.Ignition;
+        input.customCaretColor = true;
+        input.caretWidth = 3;
+        input.selectionColor = new Color(1f, 0.46f, 0.12f, 0.35f);
         return input;
     }
 }

@@ -1,39 +1,53 @@
 using System;
 using System.Collections;
+using LitMotion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// View layer for the quiz: question card, flight HUD, stamps and the result card.
+// View layer for the quiz: header, question card, answer bar, flight HUD, stamps and result card.
+// On the web the answer field is an HTML overlay (WebBridge); elsewhere it is the in-canvas bar.
 public class QuizUI : MonoBehaviour
 {
     [SerializeField] private CanvasGroup quizPanel;
-    [SerializeField] private Text promptText;
-    [SerializeField] private InputField answerInput;
+    [SerializeField] private TMP_Text promptText;
+    [SerializeField] private TMP_Text questionLabel;
+    [SerializeField] private PanelGraphic[] fuelPips;
+    [SerializeField] private CanvasGroup answerBar;
+    [SerializeField] private TMP_InputField answerInput;
     [SerializeField] private Button submitButton;
-    [SerializeField] private Text feedbackText;
-    [SerializeField] private Text scoreText;
-    [SerializeField] private Text roundText;
+    [SerializeField] private TMP_Text feedbackText;
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private TMP_Text roundText;
     [SerializeField] private CanvasGroup hudPanel;
-    [SerializeField] private Text altitudeText;
-    [SerializeField] private Text stampText;
-    [SerializeField] private Text milestoneText;
+    [SerializeField] private TMP_Text altitudeText;
+    [SerializeField] private TMP_Text stampText;
+    [SerializeField] private TMP_Text milestoneText;
     [SerializeField] private CanvasGroup resultPanel;
-    [SerializeField] private Text resultTitle;
-    [SerializeField] private Text resultDestination;
-    [SerializeField] private Text resultRarity;
-    [SerializeField] private Text resultScore;
-    [SerializeField] private Text resultNearMiss;
+    [SerializeField] private TMP_Text resultTitle;
+    [SerializeField] private TMP_Text resultDestination;
+    [SerializeField] private TMP_Text resultRarity;
+    [SerializeField] private TMP_Text resultScore;
+    [SerializeField] private TMP_Text resultNearMiss;
     [SerializeField] private Button continueButton;
-    [SerializeField] private Text continueLabel;
+    [SerializeField] private TMP_Text continueLabel;
     [SerializeField] private Image flashImage;
     [SerializeField] private Image veilImage;
+    [SerializeField] private WebBridge webBridge;
+
+    private const string Placeholder = "Cevabını yaz…";
+    private const string Hint = "Ne kadar az kişinin bildiği bir cevap verirsen o kadar uzağa gidersin.";
+
+    private static readonly System.Globalization.CultureInfo Turkish = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
 
     private Coroutine stampRoutine;
     private Coroutine milestoneRoutine;
     private Coroutine flashRoutine;
     private Coroutine resultRoutine;
-    private Coroutine shakeRoutine;
+    private MotionHandle cardMotion;
+    private MotionHandle shakeMotion;
     private Vector2 quizPanelHome;
+    private bool answering;
 
     public event Action<string> Submitted;
     public event Action Continued;
@@ -44,6 +58,10 @@ public class QuizUI : MonoBehaviour
         submitButton.onClick.AddListener(OnSubmitClicked);
         answerInput.onSubmit.AddListener(OnInputSubmitted);
         continueButton.onClick.AddListener(OnContinueClicked);
+        if (webBridge != null) webBridge.AnswerSubmitted += OnInputSubmitted;
+
+        // The HTML overlay replaces the in-canvas answer bar on the web.
+        answerBar.gameObject.SetActive(!WebBridge.UsesHtmlInput);
 
         SetGroup(hudPanel, false);
         SetGroup(resultPanel, false);
@@ -58,15 +76,19 @@ public class QuizUI : MonoBehaviour
         submitButton.onClick.RemoveListener(OnSubmitClicked);
         answerInput.onSubmit.RemoveListener(OnInputSubmitted);
         continueButton.onClick.RemoveListener(OnContinueClicked);
+        if (webBridge != null) webBridge.AnswerSubmitted -= OnInputSubmitted;
+        cardMotion.TryCancel();
+        shakeMotion.TryCancel();
     }
 
     private void OnSubmitClicked()
     {
-        if (Submitted != null) Submitted(answerInput.text);
+        OnInputSubmitted(answerInput.text);
     }
 
     private void OnInputSubmitted(string value)
     {
+        if (!answering) return;
         if (Submitted != null) Submitted(value);
     }
 
@@ -78,26 +100,45 @@ public class QuizUI : MonoBehaviour
     public void ShowQuestion(string prompt, int round, int total, int score, int attempts)
     {
         promptText.text = prompt;
-        roundText.text = "SORU " + round + " / " + total;
+        questionLabel.text = "SORU " + round.ToString("00") + "  ·  " + total.ToString("00");
+        roundText.text = round + "/" + total;
         SetScore(score);
+        SetFuel(attempts);
         answerInput.text = string.Empty;
-        feedbackText.color = new Color(0.75f, 0.85f, 1f, 0.9f);
-        feedbackText.text = "Ne kadar az bilinen bir cevap verirsen o kadar uzağa gidersin";
+        SetFeedback(Hint, RqTheme.TextSecondary);
         SetGroup(quizPanel, true);
+        SetGroup(answerBar, true);
         SetGroup(hudPanel, false);
         SetGroup(resultPanel, false);
+        answering = true;
+        AnimateCardIn();
+
+        if (webBridge != null && WebBridge.UsesHtmlInput)
+        {
+            webBridge.ShowAnswer(Placeholder);
+        }
         FocusInput();
     }
 
     public void SetScore(int score)
     {
-        scoreText.text = "PUAN " + score.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
+        scoreText.text = score.ToString("N0", Turkish);
+    }
+
+    public void SetFuel(int left)
+    {
+        for (int i = 0; i < fuelPips.Length; i++)
+        {
+            bool full = i < left;
+            fuelPips[i].SetFill(full ? RqTheme.Ignition : RqTheme.FuelEmpty, full ? RqTheme.IgnitionDeep : RqTheme.FuelEmpty);
+            fuelPips[i].SetGlow(full ? new Color(RqTheme.Ignition.r, RqTheme.Ignition.g, RqTheme.Ignition.b, 0.45f) : Color.clear);
+        }
     }
 
     public void FocusInput()
     {
         // Mobile keeps the keyboard closed until the player taps the field.
-        if (!Application.isMobilePlatform)
+        if (!Application.isMobilePlatform && !WebBridge.UsesHtmlInput)
         {
             answerInput.ActivateInputField();
         }
@@ -105,18 +146,20 @@ public class QuizUI : MonoBehaviour
 
     public void ShowWrong(string message)
     {
-        feedbackText.color = new Color(1f, 0.45f, 0.4f);
-        feedbackText.text = message;
+        SetFeedback(message, RqTheme.Danger);
         answerInput.text = string.Empty;
-        if (shakeRoutine != null) StopCoroutine(shakeRoutine);
-        shakeRoutine = StartCoroutine(ShakePanel());
+        if (webBridge != null) webBridge.ClearAnswer();
+        ShakeCard();
         FocusInput();
     }
 
     public void HideQuiz()
     {
+        answering = false;
         answerInput.DeactivateInputField();
+        if (webBridge != null) webBridge.HideAnswer();
         SetGroup(quizPanel, false);
+        SetGroup(answerBar, false);
     }
 
     public void SetHud(bool visible)
@@ -138,13 +181,13 @@ public class QuizUI : MonoBehaviour
     public void Stamp(string message, Color color)
     {
         if (stampRoutine != null) StopCoroutine(stampRoutine);
-        stampRoutine = StartCoroutine(Pop(stampText, message, color, 2.2f, 0.9f));
+        stampRoutine = StartCoroutine(Pop(stampText, message, color, 1.8f, 0.9f));
     }
 
     public void Milestone(string message, Color color)
     {
         if (milestoneRoutine != null) StopCoroutine(milestoneRoutine);
-        milestoneRoutine = StartCoroutine(Pop(milestoneText, message, color, 1.6f, 1.5f));
+        milestoneRoutine = StartCoroutine(Pop(milestoneText, message, color, 1.4f, 1.5f));
     }
 
     public void Flash(Color color, float peakAlpha, float duration)
@@ -179,9 +222,42 @@ public class QuizUI : MonoBehaviour
         SetGroup(resultPanel, false);
     }
 
+    private void SetFeedback(string message, Color color)
+    {
+        feedbackText.text = message;
+        feedbackText.color = color;
+    }
+
+    private void AnimateCardIn()
+    {
+        cardMotion.TryCancel();
+        RectTransform rect = (RectTransform)quizPanel.transform;
+        cardMotion = LMotion.Create(0f, 1f, RqTheme.Slow)
+            .WithEase(Ease.OutCubic)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .Bind(t =>
+            {
+                quizPanel.alpha = t;
+                rect.anchoredPosition = quizPanelHome + new Vector2(0f, 60f * (1f - t));
+            })
+            .AddTo(this);
+    }
+
+    private void ShakeCard()
+    {
+        shakeMotion.TryCancel();
+        cardMotion.TryCancel();
+        quizPanel.alpha = 1f;
+        RectTransform rect = (RectTransform)quizPanel.transform;
+        shakeMotion = LMotion.Create(0f, 1f, 0.35f)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .WithOnComplete(() => rect.anchoredPosition = quizPanelHome)
+            .Bind(t => rect.anchoredPosition = quizPanelHome + new Vector2(Mathf.Sin(t * Mathf.PI * 8f) * 22f * (1f - t), 0f))
+            .AddTo(this);
+    }
+
     private IEnumerator ResultRoutine(int points, Action<float> onTick)
     {
-        var culture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
         RectTransform panel = (RectTransform)resultPanel.transform;
         continueButton.gameObject.SetActive(false);
         resultScore.text = "+0";
@@ -191,7 +267,7 @@ public class QuizUI : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / 0.35f);
-            panel.localScale = Vector3.one * EaseOutBack(t);
+            panel.localScale = Vector3.one * Mathf.LerpUnclamped(0.92f, 1f, EaseOutBack(t));
             resultPanel.alpha = t;
             yield return null;
         }
@@ -206,7 +282,7 @@ public class QuizUI : MonoBehaviour
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
-            resultScore.text = "+" + Mathf.RoundToInt(points * eased).ToString("N0", culture);
+            resultScore.text = "+" + Mathf.RoundToInt(points * eased).ToString("N0", Turkish);
             if (elapsed >= nextTick)
             {
                 nextTick = elapsed + Mathf.Lerp(0.09f, 0.035f, t);
@@ -214,28 +290,28 @@ public class QuizUI : MonoBehaviour
             }
             yield return null;
         }
-        resultScore.text = "+" + points.ToString("N0", culture);
+        resultScore.text = "+" + points.ToString("N0", Turkish);
 
         elapsed = 0f;
         while (elapsed < 0.25f)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / 0.25f);
-            resultScore.rectTransform.localScale = Vector3.one * (1f + 0.35f * Mathf.Sin(t * Mathf.PI));
+            resultScore.rectTransform.localScale = Vector3.one * (1f + 0.2f * Mathf.Sin(t * Mathf.PI));
             yield return null;
         }
         resultScore.rectTransform.localScale = Vector3.one;
         continueButton.gameObject.SetActive(true);
     }
 
-    private IEnumerator Pop(Text label, string message, Color color, float startScale, float hold)
+    private IEnumerator Pop(TMP_Text label, string message, Color color, float startScale, float hold)
     {
         label.text = message;
         label.gameObject.SetActive(true);
         RectTransform rect = label.rectTransform;
 
         float elapsed = 0f;
-        const float popIn = 0.2f;
+        const float popIn = 0.22f;
         while (elapsed < popIn)
         {
             elapsed += Time.unscaledDeltaTime;
@@ -254,26 +330,10 @@ public class QuizUI : MonoBehaviour
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / fadeOut);
             label.color = new Color(color.r, color.g, color.b, 1f - t);
-            rect.localScale = Vector3.one * (1f + 0.15f * t);
+            rect.localScale = Vector3.one * (1f + 0.08f * t);
             yield return null;
         }
         label.gameObject.SetActive(false);
-    }
-
-    private IEnumerator ShakePanel()
-    {
-        RectTransform rect = (RectTransform)quizPanel.transform;
-        float elapsed = 0f;
-        const float duration = 0.35f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float t = elapsed / duration;
-            float offset = Mathf.Sin(t * Mathf.PI * 8f) * 26f * (1f - t);
-            rect.anchoredPosition = quizPanelHome + new Vector2(offset, 0f);
-            yield return null;
-        }
-        rect.anchoredPosition = quizPanelHome;
     }
 
     private IEnumerator FlashRoutine(Color color, float peakAlpha, float duration)

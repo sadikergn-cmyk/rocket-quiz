@@ -80,6 +80,22 @@ Pratik notlar:
   penceresini 1080x1920 yap; `capture_game_view --width 540 --height 960` kullan.
 - Testler: `Assets/Tests/PlayMode/RocketQuizTests.cs`.
 
+## RocketQuiz arayüzü (tasarım sistemi)
+
+- Yol haritası: `docs/GELISTIRME_PLANI.md` (fazlar F0–F10, kararlar, bütçeler). Yeni işe başlamadan oku.
+- uGUI + TextMeshPro. Eski `UnityEngine.UI.Text` kullanma. Renk/süre token'ları `RqTheme`.
+- Fontlar: Unbounded (başlık), Space Grotesk (gövde, dinamik), JetBrains Mono (telemetri).
+  TMP asset'leri `RocketQuizUiAssets.Ensure()` üretir (`Assets/Generated/RocketQuiz/UI/`); var olanı
+  yeniden üretmez, değiştirmek için asset'i AssetDatabase ile silip sahneyi yeniden üret.
+- Paneller/butonlar: `PanelGraphic` + `RocketQuiz/UI Panel` shader'ı (SDF köşe, çerçeve, parıltı).
+  Canvas'ta TexCoord1-3 kanalları açık olmalı (builder açıyor).
+- Animasyon: LitMotion (`LMotion.Create(...).Bind(...).AddTo(this)`), UI'da
+  `MotionScheduler.UpdateIgnoreTimeScale`.
+- Web'de cevap kutusu HTML'dir (`WebBridge` + `Plugins/WebGL/RocketQuizWeb.jslib` + şablondaki
+  `window.RQ`). Unity içindeki cevap çubuğu yalnızca Editor/uygulamada görünür. Güvenli alan web'de
+  şablondan `OnWebSafeArea` ile gelir (`SafeAreaFitter`).
+- Mobil web testi: tarayıcı panelinde mobil görünüm; `type` eylemi Unity'ye tuş göndermez, `key` kullan.
+
 ## GitHub ve web sürümü
 
 - Depo: https://github.com/sadikergn-cmyk/rocket-quiz (herkese açık). Oyun:

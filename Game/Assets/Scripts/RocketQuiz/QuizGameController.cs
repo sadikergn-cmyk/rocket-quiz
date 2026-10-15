@@ -82,9 +82,10 @@ public class QuizGameController : MonoBehaviour
             attemptsLeft--;
             audioDirector.Wrong();
             rig.AddTrauma(0.2f);
+            ui.SetFuel(attemptsLeft);
             if (attemptsLeft > 0)
             {
-                ui.ShowWrong("Bu cevap listede yok. Kalan hak: " + attemptsLeft);
+                ui.ShowWrong("“" + text.Trim() + "” listede yok. Bir yakıt tankı yandı.");
             }
             else
             {

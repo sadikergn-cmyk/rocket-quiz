@@ -24,3 +24,18 @@ Solar System Scope bu dokuları NASA görev verilerine dayanarak hazırlamışt�
 ## Diğer
 
 Roket, fırlatma rampası, shader'lar ve sesler bu depoda kodla üretilir; dış dosya içermez.
+
+## Fontlar
+
+`Game/Assets/Fonts/` (ve web kabuğu için `Game/Assets/WebGLTemplates/RocketQuiz/fonts/`), lisans:
+**SIL Open Font License 1.1** (lisans metinleri `Game/Assets/Fonts/OFL-*.txt`).
+
+| Font | Kaynak |
+|---|---|
+| Unbounded | https://github.com/googlefonts/unbounded |
+| Space Grotesk | https://github.com/floriankarsten/space-grotesk |
+| JetBrains Mono | https://github.com/JetBrains/JetBrainsMono |
+
+## Kod paketleri
+
+- LitMotion (MIT): https://github.com/annulusgames/LitMotion

@@ -99,7 +99,9 @@ Pratik notlar:
   linkinde yap. Sahne/materyal gerektiren işleri yerel oturuma bırak.
 - WebGL'de URP Lit görünmüyor; materyaller `RocketQuiz/Surface` shader'ını kullanır
   (`Assets/Shaders/Surface.shader`).
-- Secrets: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` (kullanıcı ekler).
+- Secrets: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` (kullanıcı ekler). Bu makinede
+  `.ulf` yok (yalnızca `%LOCALAPPDATA%\Unity\licenses\UnityEntitlementLicense.xml`); CI lisansı
+  alamazsa yedek yol: yerelde derle, `bash tools/publish_webgl.sh` ile `gh-pages`'e gönder.
 
 ## Eski örnek oyun: CoinRoller
 

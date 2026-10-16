@@ -102,6 +102,10 @@ Pratik notlar:
 - Web'de cevap kutusu HTML'dir (`WebBridge` + `Plugins/WebGL/RocketQuizWeb.jslib` + şablondaki
   `window.RQ`). Unity içindeki cevap çubuğu yalnızca Editor/uygulamada görünür. Güvenli alan web'de
   şablondan `OnWebSafeArea` ile gelir (`SafeAreaFitter`).
+- Köprü sözleşmesi v1 (Nadide Next.js kabuğu da aynısını uygular; değiştirme): Unity → sayfa `ready`,
+  `showAnswer`, `hideAnswer`, `clearAnswer`, `share(json)`, `announce(metin)`, `betaRequired()`; sayfa →
+  Unity `OnWebAnswer`, `OnWebSafeArea`, `OnWebVisibility`, `OnWebReducedMotion("1"|"0")`,
+  `OnWebShareResult(...)`. Yük ve metinler: `Game/BridgeMessages.cs`.
 - Mobil web testi: tarayıcı panelinde mobil görünüm; `type` eylemi Unity'ye tuş göndermez, `key` kullan.
 
 ## Roket (görsel)
@@ -128,6 +132,9 @@ Pratik notlar:
   `RocketQuiz.unity`, Gzip + Decompression Fallback (Pages `Content-Encoding` gönderemez),
   şablon `Assets/WebGLTemplates/RocketQuiz/`. Yerelde: `Tools > Build RocketQuiz WebGL`, sonra
   `python tools/serve_webgl.py` (http://localhost:8090).
+- Nadide için: derleme `Build/` yanına `rq-build.json` yazar (sürüm + dosya yolları). Paket:
+  `powershell -ExecutionPolicy Bypass -File tools\package_webgl.ps1` → `rocketquiz-webgl-<sürüm>.zip` ve
+  ekrana yazdığı `gh release create ...` komutu (elle çalıştırılır).
 - CI sahneyi yeniden üretmez; derlenen şey depodaki `RocketQuiz.unity`'dir. Builder kodunu
   değiştirdiysen sahneyi Editor'de yeniden üretip onu da commit'le.
 - **Bulut oturumu (Unity Editor yok):** `unity` CLI ve MCP çalışmaz. Yalnızca C#/shader/JSON

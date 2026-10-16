@@ -7,19 +7,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// One finished question of today's run, for the result screen and the share text.
-public struct DayRow
-{
-    public int Position;
-    public string Prompt;
-    public string Answer;
-    public StopId Stop;
-    public int Points;
-    public bool OnlyYou;
-}
-
 // Full-screen and overlay screens around the question card: logo intro, Hangar (open screen),
 // "Bunu mu demek istediniz?", stop moment card, day result and yesterday's final reveal.
+// The moment card doubles as the error card ("Tekrar dene"), so errors need no extra scene objects.
 // Copy follows Nadide's tr.ts; the look is RocketQuiz's mission-control system.
 public class GameScreens : MonoBehaviour
 {
@@ -80,10 +70,13 @@ public class GameScreens : MonoBehaviour
     private MotionHandle countMotion;
     private MotionHandle fadeMotion;
     private bool resultVisible;
+    private bool errorMode;
+    private Coroutine shareLabelRoutine;
 
     public event Action StartPressed;
     public event Action<bool> SuggestionAnswered;
     public event Action MomentContinue;
+    public event Action RetryPressed;
     public event Action SharePressed;
     public event Action FinalContinue;
 
@@ -129,6 +122,7 @@ public class GameScreens : MonoBehaviour
         Set(result, false);
         Set(final, false);
         resultVisible = false;
+        errorMode = false;
     }
 
     // ---------- intro ----------
@@ -159,12 +153,14 @@ public class GameScreens : MonoBehaviour
 
     // ---------- hangar ----------
 
-    public void ShowHangar(SessionInfo info, int total, int seconds)
+    // dayNumber 0 = unknown (play/state does not send it): the kicker then starts with the date.
+    public void ShowHangar(int dayNumber, string date, ProgressView progress, int total, int seconds)
     {
-        hangarKicker.text = "#" + info.dayNumber + "  ·  " + DayLabel(info.date) + "  ·  " + total + " SORU  ·  " + seconds + " SANİYE";
-        bool resume = info.progress != null && info.progress.answered > 0 && !info.progress.finished;
+        string day = dayNumber > 0 ? "#" + dayNumber + "  ·  " : string.Empty;
+        hangarKicker.text = day + DayLabel(date) + "  ·  " + total + " SORU  ·  " + seconds + " SANİYE";
+        bool resume = progress != null && progress.answered > 0 && !progress.finished;
         startLabel.text = resume ? "DEVAM" : "BAŞLA";
-        hangarResume.text = resume ? "Kaldığın yer: soru " + (info.progress.answered + 1) + " / " + total : string.Empty;
+        hangarResume.text = resume ? "Kaldığın yer: soru " + (progress.answered + 1) + " / " + total : string.Empty;
         hangarMap.ResetMap(true);
         Set(hangar, true);
         StartCoroutine(Fade(hangar, true, 0.4f));
@@ -200,6 +196,7 @@ public class GameScreens : MonoBehaviour
 
     public void ShowMoment(StopId stop, string answer, int points, bool onlyYou, bool last)
     {
+        errorMode = false;
         Color c = RqStops.Color(stop);
         momentAccent.SetFill(c, new Color(c.r, c.g, c.b, 0.35f));
         momentKicker.text = RqStops.Kicker(stop);
@@ -227,7 +224,30 @@ public class GameScreens : MonoBehaviour
 
     public void HideMoment()
     {
+        errorMode = false;
         Set(moment, false);
+    }
+
+    // ---------- error (the moment card with a "Tekrar dene" button) ----------
+
+    public void ShowError(string title, string message)
+    {
+        errorMode = true;
+        countMotion.TryCancel();
+        Color c = RqTheme.Danger;
+        momentAccent.SetFill(c, new Color(c.r, c.g, c.b, 0.35f));
+        momentKicker.text = "GÖREV KONTROL";
+        momentKicker.color = c;
+        momentName.text = title;
+        momentName.color = RqTheme.TextPrimary;
+        momentLine.text = string.IsNullOrEmpty(message) ? NadideErrors.Server : message;
+        momentAnswer.text = string.Empty;
+        momentPoints.text = string.Empty;
+        momentStatus.text = string.Empty;
+        momentButtonLabel.text = "TEKRAR DENE";
+        momentButton.gameObject.SetActive(true);
+        Set(moment, true);
+        StartCoroutine(Fade(moment, true, RqTheme.Medium));
     }
 
     // ---------- result ----------
@@ -269,7 +289,23 @@ public class GameScreens : MonoBehaviour
 
     public void SetShareLabel(string text)
     {
+        if (shareLabelRoutine != null) StopCoroutine(shareLabelRoutine);
+        shareLabelRoutine = null;
         shareLabel.text = text;
+    }
+
+    // Brief feedback on the share button (the host's share result), then back to "PAYLAŞ".
+    public void FlashShareLabel(string text, float seconds)
+    {
+        SetShareLabel(text);
+        if (text != "PAYLAŞ") shareLabelRoutine = StartCoroutine(RestoreShareLabel(seconds));
+    }
+
+    private IEnumerator RestoreShareLabel(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        shareLabelRoutine = null;
+        shareLabel.text = "PAYLAŞ";
     }
 
     public static string ShareText(DayRow[] rows, int total, int dayNumber)
@@ -396,7 +432,15 @@ public class GameScreens : MonoBehaviour
     private void OnStart() { if (StartPressed != null) StartPressed(); }
     private void OnNo() { if (SuggestionAnswered != null) SuggestionAnswered(false); }
     private void OnYes() { if (SuggestionAnswered != null) SuggestionAnswered(true); }
-    private void OnMoment() { if (MomentContinue != null) MomentContinue(); }
+    private void OnMoment()
+    {
+        if (errorMode)
+        {
+            if (RetryPressed != null) RetryPressed();
+            return;
+        }
+        if (MomentContinue != null) MomentContinue();
+    }
     private void OnShare() { if (SharePressed != null) SharePressed(); }
     private void OnFinal() { if (FinalContinue != null) FinalContinue(); }
 }

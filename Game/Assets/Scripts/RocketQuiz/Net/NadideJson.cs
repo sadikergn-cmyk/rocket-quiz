@@ -43,7 +43,19 @@ public static class NadideJson
         StartWire wire = Read<StartWire>(json);
         if (info == null || wire == null || string.IsNullOrEmpty(wire.token)) return null;
         token = wire.token;
+        info.prompts = NormalizePrompts(info.prompts);
         return info;
+    }
+
+    // GET /api/play/state -> PlayState (read-only; no token). `current` is the same view play/next returns.
+    public static PlayState ParseState(string json)
+    {
+        PlayState state = Read<PlayState>(Prepare(json));
+        if (state == null || string.IsNullOrEmpty(state.status)) return null;
+        if (state.status == "not_started") state.progress = null;
+        if (state.current == null || string.IsNullOrEmpty(state.current.promptId)) state.current = null;
+        Normalize(state.current);
+        return state;
     }
 
     // POST /api/play/next -> NextResult (`timedOut` is filled by the session, the server does not send it).
@@ -172,6 +184,25 @@ public static class NadideJson
         if (prompt.state != "suggested") prompt.frozenSecondsLeft = -1f;
     }
 
+    // JsonUtility fills absent objects with empty instances; only answered prompts keep match and score.
+    private static PromptProgress[] NormalizePrompts(PromptProgress[] prompts)
+    {
+        if (prompts == null) return new PromptProgress[0];
+        var list = new List<PromptProgress>();
+        foreach (PromptProgress p in prompts)
+        {
+            if (p == null || string.IsNullOrEmpty(p.promptId)) continue;
+            bool answered = p.state == "answered";
+            if (!answered || p.score == null || string.IsNullOrEmpty(p.score.status)) p.score = null;
+            if (!answered || p.match == null || string.IsNullOrEmpty(p.match.kind)) p.match = null;
+            if (p.score != null && string.IsNullOrEmpty(p.score.tier)) p.score.tier = null;
+            if (p.match != null) p.match.suggestion = Optional(p.match.suggestion);
+            list.Add(p);
+        }
+        list.Sort((a, b) => a.position.CompareTo(b.position));
+        return list.ToArray();
+    }
+
     private static string Optional(string value)
     {
         return string.IsNullOrEmpty(value) ? null : value;
@@ -224,6 +255,15 @@ public sealed class NadideError
     public string message;
 }
 
+// What "Tekrar dene" does after a failed call: resend the same call, reopen the day from the Hangar, or (closed
+// beta) ask the web shell for the access code first and then resend.
+public enum SessionFailure
+{
+    Retry,
+    Restart,
+    BetaRequired,
+}
+
 // Turkish, player-facing texts for the session's fail callback.
 public static class NadideErrors
 {
@@ -232,6 +272,27 @@ public static class NadideErrors
     public const string BadResponse = "Sunucunun yanıtı okunamadı. Biraz sonra yeniden dene.";
     public const string SessionExpired = "Oturumun süresi doldu. Günün oyununu yeniden başlat.";
     public const string InvalidSession = "Oturum bulunamadı. Oyunu yeniden başlat.";
+    public const string BetaRequired = "Kapalı beta: önce erişim kodunu gir.";
+
+    // Error code (NadideGameSession.LastErrorCode; null for the offline mock) -> what the retry button does.
+    // 401 `beta_required` comes from the beta gate (apps/web/src/app/beta/gate.ts) on every /api route.
+    public static SessionFailure Classify(string code)
+    {
+        switch (code)
+        {
+            case "beta_required":
+                return SessionFailure.BetaRequired;
+            case "session_expired":
+            case "invalid_session":
+            case "play_finished":
+            case "unknown_prompt":
+            case "prompt_not_shown":
+            case "no_suggestion":
+                return SessionFailure.Restart;
+            default:
+                return SessionFailure.Retry;
+        }
+    }
 
     public static string UserMessage(NadideError error)
     {
@@ -241,7 +302,7 @@ public static class NadideErrors
         {
             case "session_expired": return SessionExpired;
             case "invalid_session": return InvalidSession;
-            case "beta_required": return "Kapalı beta: önce erişim kodunu gir.";
+            case "beta_required": return BetaRequired;
             case "play_finished": return "Bugünün oyunu bitti. Yeni sorular gece yarısı geliyor.";
             case "no_content": return "Bugün için soru bulunamadı.";
             case "prompt_not_shown": return "Soru henüz açılmadı. Yeniden dene.";

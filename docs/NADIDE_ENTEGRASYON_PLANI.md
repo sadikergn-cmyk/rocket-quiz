@@ -1,6 +1,8 @@
 # RocketQuiz → Nadide (krillion-tr) entegrasyon planı
 
-Durum: taslak, 2026-10-15. Tasarım oturumu bitince uygulamaya geçilecek.
+Durum: 2026-10-16. Karar kaydı Nadide'ye **0022 / K22** olarak girdi (krillion-tr #132, *Önerildi*, ekip oylaması
+sürüyor; #131 oylamayla kapanır). 0021 Nadide'de başka kayda ait olduğu için numara 0022'ye taşındı. Nadide tarafında
+kabuk (#134, bayrak arkasında) ve `play/state` gün numarası (#133) main'de; Unity tarafı köprü v1 rocket-quiz PR #1'de.
 Hedef repo: https://github.com/takatamakata/krillion-tr (özel, Next.js 16 + Supabase, Vercel).
 
 ## 1. Alınan kararlar
@@ -11,7 +13,7 @@ Hedef repo: https://github.com/takatamakata/krillion-tr (özel, Next.js 16 + Sup
 | K1b | Görsel kimlik (2026-10-15) | **Nadide görüntüsü kalkar, RocketQuiz görüntüsü gelir.** Nadide'nin intro/menü *akışı* (logo intro, nasıl oynanır, Başla/Devam, günün durumu) korunur ama Unity içinde RocketQuiz tasarım sistemiyle yeniden kurulur (F3 "Hangar" ekranı). Kabukta kalan `/beta` ekranı ve yükleme ekranı da RocketQuiz token/fontlarına geçer. Nadide'nin Canvas gökyüzü, `tokens.css`, Figtree ve `open.tsx` görünümü emekliye ayrılır. |
 | K2 | Kurallar | **Nadide kuralları.** 8 gezegen (0017) + Ay tuzak kademesi + "Güneş'te kaldı"; günde 5 soru, 30 sn, tek tahmin, "bunu mu demek istedin" (0018); puan sunucuda (0008); mesafe sayısı yok (0020). |
 | K3 | Kimlik | **Mevcut yapı.** Misafir `nadide_device` çerezi + `/beta` kodu. Google/Apple girişi M3'te, ayrı iş. |
-| K4 | Süreç | **Önce ADR, sonra kod.** ADR 0021 + bu plan küçük bir doküman PR'ı olarak gider, ekip oylar; onaydan sonra kod PR'ı. |
+| K4 | Süreç | **Önce ADR, sonra kod.** ADR 0022 (ilk taslakta 0021) + bu plan küçük bir doküman PR'ı olarak gider, ekip oylar; onaydan sonra kod PR'ı. |
 
 Değişmeyen kısıt: production yalnızca Dino'nun merge commit'iyle yayına çıkar (Vercel Hobby,
 `docs/test-rehberi.md` §0). Bizim işimiz PR'ı merge'e hazır hale getirmek.
@@ -37,7 +39,7 @@ Tarayıcı (aynı origin: nadide-beta.vercel.app)
 - Sıkıştırma: Vercel `Content-Encoding` gönderebildiği için Gzip/Brotli başlıkları `vercel.json`
   `headers` ile verilir, decompression fallback kapatılır (doğrulanacak).
 - 0016'daki 40 KB ilk yükleme bütçesi **kabuk için korunur** (beta + yükleme ekranı); oyun paketi
-  ayrı bütçe (hedef ≤30 MB, ADR 0021'de yazılır).
+  ayrı bütçe (hedef ≤30 MB, ADR 0022 · 8).
 - Unity kaynak kodu `sadikergn-cmyk/rocket-quiz` reposunda kalır (LFS'li dokular, Unity araçları
   orada kurulu). Nadide reposuna yalnızca köprü, indirme script'i ve ADR girer.
 
@@ -66,13 +68,13 @@ Bunlar sürmekte olan tasarım işini doğrudan etkiliyor:
 
 ## 4. İş paketleri
 
-### P0. Doküman PR'ı (tasarımla paralel yapılabilir)
-- [ ] `docs/decisions/0021-unity-oyun-istemcisi.md`: bağlam (0008/0016'dan sapma), karar (Unity
+### P0. Doküman PR'ı — bitti (krillion-tr #132)
+- [x] `docs/decisions/0022-unity-oyun-istemcisi.md` (ilk adı 0021): bağlam (0008/0016'dan sapma), karar (Unity
       oyun istemcisi + Next.js kabuk + sunucu puanı aynen + görsel kimliğin RocketQuiz'e geçmesi,
       GDD 05 marka bölümünün güncellenmesi), bütçeler, geri dönüş planı (eski
       `Game.tsx` bayrakla kalır), açık sorular.
-- [ ] Bu planın Nadide repo'suna uyarlanmış özeti (`docs/` altında).
-- [ ] Dal `sado/0021-unity-istemci`, PR açılır, ekip oylaması.
+- [x] Bu planın Nadide repo'suna uyarlanmış özeti (kaydın kendisi).
+- [x] Dal `sado/0021-unity-istemci`, PR #132 birleşti; ekip oylaması sürüyor.
 
 ### P1. Unity: sunucu güdümlü oyun akışı
 - [ ] `claude/admiring-thompson-s6qrbj` dalındaki `apps/unity` C# API istemcisini ve DTO'ları
@@ -83,7 +85,7 @@ Bunlar sürmekte olan tasarım işini doğrudan etkiliyor:
 - [ ] 30 sn sayaç, tek tahmin, "bunu mu demek istedin", hata durumları (ağ, oturum süresi dolması).
 - [ ] Build'den cevap verisini çıkar (Resources'taki `questions.json` yalnızca Editor mock'u).
 
-### P2. Web kabuğu (Nadide `apps/web`)
+### P2. Web kabuğu (Nadide `apps/web`) — krillion-tr #134 ile main'de, `NADIDE_UNITY_CLIENT` bayrağı kapalı
 - [ ] `ui/unity/UnityHost.tsx`: RocketQuiz yükleme ekranı, `window.RQ` köprüsü, cevap kutusu,
       güvenli alan, görünürlük; `/` rotasında `Game.tsx` yerine geçer (geri dönüş için bayrak kalır).
 - [ ] `/beta` ekranını RocketQuiz görünümüne çevir (Unbounded/Space Grotesk, `RqTheme` renkleri).

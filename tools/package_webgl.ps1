@@ -31,7 +31,8 @@ foreach ($key in @("loaderUrl", "dataUrl", "frameworkUrl", "codeUrl")) {
 }
 
 $version = [string]$manifest.version
-if ($version -notmatch '^[0-9A-Za-z._-]+$') { throw "Surum etiketi gecersiz: $version" }
+# Same rule as Nadide (apps/web/src/ui/unity/flag.ts): the tag becomes part of the /oyun/<version>/ path.
+if ($version -cnotmatch '^[0-9A-Za-z][0-9A-Za-z._-]{0,40}$' -or $version.Contains("..")) { throw "Surum etiketi gecersiz: $version (harf/rakamla baslar; harf, rakam, . _ -; en cok 41 karakter; '..' yok)" }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $OutDir = (Resolve-Path $OutDir).Path

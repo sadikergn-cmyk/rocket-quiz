@@ -95,9 +95,10 @@ public class NadideBridgeTests
     [Test]
     public void State_NotStarted_HasNoProgressOrPrompt()
     {
-        PlayState state = NadideJson.ParseState(J("{'status':'not_started','lang':'tr','date':'2026-10-15'}"));
+        PlayState state = NadideJson.ParseState(J("{'status':'not_started','lang':'tr','date':'2026-10-15','dayNumber':42}"));
         Assert.AreEqual("not_started", state.status);
         Assert.AreEqual("2026-10-15", state.date);
+        Assert.AreEqual(42, state.dayNumber);
         Assert.IsNull(state.progress);
         Assert.IsNull(state.current);
     }
@@ -125,6 +126,7 @@ public class NadideBridgeTests
         PlayState state = NadideJson.ParseState(J(
             "{'status':'finished','lang':'tr','date':'2026-10-15','progress':{'answered':5,'total':5,'finished':true,'provisionalTotal':130},'current':null}"));
         Assert.AreEqual("finished", state.status);
+        Assert.AreEqual(0, state.dayNumber, "older servers send no dayNumber: the Hangar estimates it");
         Assert.IsTrue(state.progress.finished);
         Assert.IsNull(state.current);
         Assert.IsNull(NadideJson.ParseState("<html>"), "not JSON");
@@ -259,6 +261,8 @@ public class NadideBridgeTests
         session.State(s => state = s, e => Assert.Fail(e));
         Assert.AreEqual("not_started", state.status);
         Assert.IsNull(state.progress);
+        int dayNumber = state.dayNumber;
+        Assert.Greater(dayNumber, 0, "play/state carries the day number");
 
         NextResult next = null;
         session.Start(i => { }, e => Assert.Fail(e));
@@ -274,6 +278,7 @@ public class NadideBridgeTests
 
         SessionInfo info = null;
         session.Start(i => info = i, e => Assert.Fail(e));
+        Assert.AreEqual(dayNumber, info.dayNumber, "play/state and play/start agree on the day number");
         Assert.AreEqual("answered", info.prompts[0].state);
         Assert.AreEqual(result.score.tier, info.prompts[0].score.tier);
         Assert.AreEqual(1, DayProgress.RowsFrom(info.prompts, null).Count);

@@ -2,7 +2,8 @@ using System;
 using UnityEngine;
 
 // IGameSession over Nadide's HTTP API (daily game, planet ladder):
-//   Start   POST /api/play/start {lang}                 -> SessionInfo (token kept here)
+//   State   GET  /api/play/state?lang                    -> PlayState (read-only; the Hangar)
+//   Start   POST /api/play/start {lang}                 -> SessionInfo (token kept here; prompts for resume)
 //   Next    POST /api/play/next  {token}                -> NextResult
 //   Answer  POST /api/answer     {token,promptId,answer}  -> AnswerResult
 //   Confirm POST /api/answer     {token,promptId,confirm} -> AnswerResult
@@ -45,6 +46,27 @@ public sealed class NadideGameSession : IGameSession
     public string Token { get { return token; } }
     public string Date { get { return date; } }
     public Func<DateTime> UtcNow { get; set; }
+
+    // Cookie only, creates nothing: "not_started" for a new guest (no cookie yet) as well as for a new day.
+    public void State(Action<PlayState> done, Action<string> fail)
+    {
+        Send(new Call
+        {
+            Method = "GET",
+            Path = "/api/play/state?lang=" + Uri.EscapeDataString(lang),
+            Fail = fail,
+            Ok = body =>
+            {
+                PlayState state = NadideJson.ParseState(body);
+                if (state == null)
+                {
+                    fail(NadideErrors.BadResponse);
+                    return;
+                }
+                done(state);
+            },
+        });
+    }
 
     public void Start(Action<SessionInfo> done, Action<string> fail)
     {

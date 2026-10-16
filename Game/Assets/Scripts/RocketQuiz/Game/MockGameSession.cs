@@ -21,6 +21,8 @@ public class MockGameSession : IGameSession
     private readonly List<string> attempts = new List<string>();
     private readonly HashSet<string> tried = new HashSet<string>();
     private readonly HashSet<string> declined = new HashSet<string>();
+    // Settled prompts in order (score + match kind), for the resume list Start returns.
+    private readonly List<PromptProgress> settled = new List<PromptProgress>();
 
     private bool open;
     private float shownAt;
@@ -62,8 +64,26 @@ public class MockGameSession : IGameSession
         get { return frozen ? frozenLeft : Mathf.Max(0f, seconds - (Time.realtimeSinceStartup - shownAt)); }
     }
 
+    public void State(Action<PlayState> done, Action<string> fail)
+    {
+        bool started = open || progress.answered > 0;
+        done(new PlayState
+        {
+            status = !started ? "not_started" : progress.finished ? "finished" : "in_progress",
+            date = today.ToString("yyyy-MM-dd"),
+            progress = started ? Copy(progress) : null,
+            current = open ? View() : null,
+        });
+    }
+
     public void Start(Action<SessionInfo> done, Action<string> fail)
     {
+        var list = new List<PromptProgress>(settled);
+        for (int i = settled.Count; i < prompts.Length; i++)
+        {
+            string state = i == settled.Count && open ? (pending != null ? "suggested" : "open") : "pending";
+            list.Add(new PromptProgress { promptId = (i + 1).ToString(), position = i + 1, state = state });
+        }
         done(new SessionInfo
         {
             dayNumber = (today - new DateTime(2026, 1, 1)).Days + 1,
@@ -72,6 +92,7 @@ public class MockGameSession : IGameSession
             resumed = progress.answered > 0,
             secondsPerPrompt = Mathf.RoundToInt(seconds),
             progress = Copy(progress),
+            prompts = list.ToArray(),
         });
     }
 
@@ -224,7 +245,21 @@ public class MockGameSession : IGameSession
     {
         open = false;
         pending = null;
+        Settle("timeout", new ScoreView { status = "zero" });
         progress.answered++;
+    }
+
+    private void Settle(string kind, ScoreView score)
+    {
+        int position = settled.Count + 1;
+        settled.Add(new PromptProgress
+        {
+            promptId = position.ToString(),
+            position = position,
+            state = "answered",
+            match = new MatchView { kind = kind },
+            score = new ScoreView { status = score.status, tier = score.tier, points = score.points, onlyYou = score.onlyYou },
+        });
     }
 
     private AnswerResult Accept(QuizAnswer answer, string kind)
@@ -237,6 +272,7 @@ public class MockGameSession : IGameSession
         progress.provisionalTotal += points;
         progress.finished = progress.answered >= prompts.Length;
         var score = new ScoreView { status = "provisional", tier = RqStops.Id(stop), points = points, onlyYou = answer.percent < 0.2f };
+        Settle(kind, score);
         AnswerResult result = Result("accepted", kind, score, answer.text);
         return result;
     }

@@ -80,6 +80,35 @@ public class SessionInfo
     public bool resumed;
     public int secondsPerPrompt = 30;
     public ProgressView progress;
+    // Every prompt of the day in order (PlayStartResponse.prompts); answered ones carry their stop, so a reload
+    // restores the finished questions. Never null after parsing (empty when the server sent none).
+    public PromptProgress[] prompts;
+}
+
+// One prompt of the day (PromptProgressView): "pending" | "open" | "suggested" | "answered".
+// `match` and `score` are only set for "answered"; the answer text itself is not part of the contract.
+[Serializable]
+public class PromptProgress
+{
+    public string promptId;
+    public int position;
+    public string state;
+    public MatchView match;
+    public ScoreView score;
+}
+
+// GET /api/play/state: today's game as the server sees it, without creating one (the Hangar opens on this).
+// The server does not send dayNumber or secondsPerPrompt here; those come with play/start.
+[Serializable]
+public class PlayState
+{
+    // "not_started" | "in_progress" | "finished"
+    public string status;
+    public string date;
+    // Null for "not_started".
+    public ProgressView progress;
+    // The prompt on screen (shown, waiting for an answer or a confirmation); null when there is none.
+    public PromptView current;
 }
 
 [Serializable]
@@ -123,6 +152,8 @@ public class FinalPrompt
 // MockGameSession plays offline from the Editor-only Assets/Editor/RocketQuiz/questions.json.
 public interface IGameSession
 {
+    // Read-only look at today's game for the Hangar: never opens a game; "Başla" calls Start.
+    void State(Action<PlayState> done, Action<string> fail);
     void Start(Action<SessionInfo> done, Action<string> fail);
     void Next(Action<NextResult> done, Action<string> fail);
     void Answer(string promptId, string text, Action<AnswerResult> done, Action<string> fail);

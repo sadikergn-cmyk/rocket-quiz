@@ -6,6 +6,9 @@ using UnityEngine;
 // Drives one day of play with Nadide's rules: 5 prompts, 30 s each, retries until time runs out,
 // "Bunu mu demek istediniz?" confirmation, a server-decided stop per answer and a provisional total.
 // All game state comes from an IGameSession (MockGameSession offline; the Nadide network session in Net/).
+// The Hangar reads the day with State (play/state, creates nothing); "Başla"/"Devam" opens it with Start
+// (play/start), whose prompt list restores the finished questions after a reload. A failed call shows the
+// error card; "Tekrar dene" resends it (or reopens the day when the session is gone).
 public class QuizGameController : MonoBehaviour
 {
     public enum GameState
@@ -18,6 +21,7 @@ public class QuizGameController : MonoBehaviour
         Launching,
         Moment,
         Result,
+        Error,
     }
 
     // Swapped by the Nadide integration (Net/) for the real server session.
@@ -26,6 +30,7 @@ public class QuizGameController : MonoBehaviour
     private const string IntroSeenKey = "rq.introSeen";
     private const string StreakKey = "rq.streak";
     private const string LastDayKey = "rq.lastDay";
+    private const float ShareLabelSeconds = 2.5f;
 
     [SerializeField] private QuizUI ui;
     [SerializeField] private GameScreens screens;
@@ -35,12 +40,15 @@ public class QuizGameController : MonoBehaviour
     [SerializeField] private bool playIntro = true;
 
     private IGameSession session;
+    private WebBridge bridge;
     private SessionInfo info;
     private PromptView prompt;
+    private AnswerMemo memo;
     private float deadline;
     private bool frozen;
     private float frozenLeft;
     private bool busy;
+    private Action retry;
     private readonly List<DayRow> rows = new List<DayRow>();
 
     public GameState State { get; private set; }
@@ -49,6 +57,7 @@ public class QuizGameController : MonoBehaviour
     public int LastPoints { get; private set; }
     public PromptView CurrentPrompt { get { return prompt; } }
     public IGameSession Session { get { return session; } }
+    public SessionFailure LastFailure { get; private set; }
 
     private void Start()
     {
@@ -60,6 +69,9 @@ public class QuizGameController : MonoBehaviour
         screens.MomentContinue += Continue;
         screens.SharePressed += Share;
         screens.FinalContinue += CloseFinal;
+        screens.RetryPressed += Retry;
+        bridge = WebBridge.Instance;
+        if (bridge != null) bridge.ShareResult += OnShareResult;
         director.ResetToPad();
         StartCoroutine(Boot());
     }
@@ -74,7 +86,9 @@ public class QuizGameController : MonoBehaviour
             screens.MomentContinue -= Continue;
             screens.SharePressed -= Share;
             screens.FinalContinue -= CloseFinal;
+            screens.RetryPressed -= Retry;
         }
+        if (bridge != null) bridge.ShareResult -= OnShareResult;
     }
 
     private void Update()
@@ -125,26 +139,61 @@ public class QuizGameController : MonoBehaviour
         OpenHangar();
     }
 
+    // play/state only: the game is opened when the player presses Başla/Devam.
     private void OpenHangar()
     {
         State = GameState.Hangar;
+        busy = true;
+        session.State(day =>
+        {
+            busy = false;
+            if (day.status == "finished")
+            {
+                // play/start hands back the finished game: its stops for the result and the day number to share.
+                StartSession(ShowHangarFromInfo);
+                return;
+            }
+            int total = day.progress != null && day.progress.total > 0 ? day.progress.total : MockGameSession.PromptsPerDay;
+            screens.ShowHangar(DayProgress.EstimateDayNumber(day.date), day.date, day.progress, total,
+                Mathf.RoundToInt(MockGameSession.SecondsPerPrompt));
+        }, FailThen(OpenHangar));
+    }
+
+    private void ShowHangarFromInfo()
+    {
+        State = GameState.Hangar;
+        int total = info.progress != null && info.progress.total > 0 ? info.progress.total : MockGameSession.PromptsPerDay;
+        screens.ShowHangar(info.dayNumber, info.date, info.progress, total, info.secondsPerPrompt);
+    }
+
+    public void BeginDay()
+    {
+        if (State != GameState.Hangar || busy) return;
+        screens.HideHangar();
+        StartSession(RequestNext);
+    }
+
+    // play/start opens today's game or resumes it. Its prompt list is the server's word on the finished
+    // questions, so the rows are rebuilt from it (answer texts from this device's memo, display only).
+    private void StartSession(Action then)
+    {
+        busy = true;
         session.Start(i =>
         {
+            busy = false;
             info = i;
+            DayProgress.RememberDayNumber(i.date, i.dayNumber);
+            memo = AnswerMemo.Load(i.date);
+            rows.Clear();
+            rows.AddRange(DayProgress.RowsFrom(i.prompts, memo));
+            Score = i.progress != null ? i.progress.provisionalTotal : DayProgress.Total(rows);
             if (i.status == "finished")
             {
                 ShowResult();
                 return;
             }
-            screens.ShowHangar(i, i.progress != null && i.progress.total > 0 ? i.progress.total : MockGameSession.PromptsPerDay, i.secondsPerPrompt);
-        }, Fail);
-    }
-
-    public void BeginDay()
-    {
-        if (State != GameState.Hangar) return;
-        screens.HideHangar();
-        RequestNext();
+            then();
+        }, FailThen(() => StartSession(then)));
     }
 
     // ---------- question loop ----------
@@ -161,7 +210,7 @@ public class QuizGameController : MonoBehaviour
                 return;
             }
             ShowPrompt(next.prompt);
-        }, Fail);
+        }, FailThen(RequestNext));
     }
 
     private void ShowPrompt(PromptView view)
@@ -171,12 +220,17 @@ public class QuizGameController : MonoBehaviour
         frozen = view.frozenSecondsLeft >= 0f;
         frozenLeft = view.frozenSecondsLeft;
         deadline = Time.realtimeSinceStartup + view.secondsLeft;
-        ui.ShowQuestion(view, Score, info != null ? info.secondsPerPrompt : MockGameSession.SecondsPerPrompt);
+        ui.ShowQuestion(view, Score, SecondsPerPrompt);
         if (State == GameState.Suggestion)
         {
             ui.SetAnswering(false);
             screens.ShowSuggestion(view.suggestion, view.typed, frozen);
         }
+    }
+
+    private float SecondsPerPrompt
+    {
+        get { return info != null ? info.secondsPerPrompt : MockGameSession.SecondsPerPrompt; }
     }
 
     public void SubmitAnswer(string text)
@@ -185,16 +239,43 @@ public class QuizGameController : MonoBehaviour
         {
             return;
         }
+        SendAnswer(text);
+    }
+
+    private void SendAnswer(string text)
+    {
         busy = true;
-        session.Answer(prompt.promptId, text, result => { busy = false; HandleAnswer(result); }, Fail);
+        session.Answer(prompt.promptId, text, result => { busy = false; HandleAnswer(result); }, FailThen(() =>
+        {
+            ReopenQuestion();
+            SendAnswer(text);
+        }));
     }
 
     private void ConfirmSuggestion(bool yes)
     {
         if (State != GameState.Suggestion || busy) return;
-        busy = true;
         screens.HideSuggestion();
-        session.Confirm(prompt.promptId, yes, result => { busy = false; HandleAnswer(result); }, Fail);
+        SendConfirm(yes);
+    }
+
+    private void SendConfirm(bool yes)
+    {
+        busy = true;
+        session.Confirm(prompt.promptId, yes, result => { busy = false; HandleAnswer(result); }, FailThen(() =>
+        {
+            ReopenQuestion();
+            State = GameState.Suggestion;
+            ui.SetAnswering(false);
+            SendConfirm(yes);
+        }));
+    }
+
+    // After the error card: the question card and the answer bar come back with the clock where it was.
+    private void ReopenQuestion()
+    {
+        State = GameState.Question;
+        ui.ShowQuestion(prompt, Score, SecondsPerPrompt);
     }
 
     private void HandleAnswer(AnswerResult result)
@@ -268,6 +349,7 @@ public class QuizGameController : MonoBehaviour
         LastPoints = points;
         bool last = prompt != null && prompt.position >= prompt.total;
         screens.ShowMoment(stop, answer, points, onlyYou, last);
+        Announce(BridgeMessages.StopAnnouncement(stop, points, onlyYou));
     }
 
     public void Continue()
@@ -288,15 +370,22 @@ public class QuizGameController : MonoBehaviour
 
     private void Record(StopId stop, string answer, int points, bool onlyYou)
     {
-        rows.Add(new DayRow
+        int position = prompt != null ? prompt.position : rows.Count + 1;
+        DayProgress.Put(rows, new DayRow
         {
-            Position = prompt != null ? prompt.position : rows.Count + 1,
+            Position = position,
             Prompt = prompt != null ? prompt.text : string.Empty,
             Answer = answer,
             Stop = stop,
             Points = points,
             OnlyYou = onlyYou,
         });
+        if (!string.IsNullOrEmpty(answer) && info != null)
+        {
+            if (memo == null) memo = AnswerMemo.Load(info.date);
+            memo.Set(position, answer);
+            memo.Save();
+        }
     }
 
     // ---------- result ----------
@@ -308,18 +397,33 @@ public class QuizGameController : MonoBehaviour
         ui.SetHud(false);
         ui.SetHeader(false);
         int streak = UpdateStreak();
-        int total = 0;
-        foreach (DayRow row in rows) total += row.Points;
+        int total = DayProgress.Total(rows);
         if (info != null && info.progress != null && rows.Count == 0) total = info.progress.provisionalTotal;
         Score = total;
         screens.ShowResult(rows.ToArray(), total, info != null ? info.dayNumber : 0, info != null ? info.date : string.Empty, streak);
+        Announce(BridgeMessages.ResultAnnouncement(total));
     }
 
+    // The page (Nadide host or the template) writes the share text and card; without one, the old copy text.
     private void Share()
     {
-        string text = GameScreens.ShareText(rows.ToArray(), Score, info != null ? info.dayNumber : 0);
-        GUIUtility.systemCopyBuffer = text;
+        DayRow[] day = rows.ToArray();
+        int dayNumber = info != null ? info.dayNumber : 0;
+        string payload = BridgeMessages.SharePayload(info != null ? info.date : string.Empty, dayNumber, Score, day);
+        if (bridge != null && bridge.Share(payload)) return;
+        GUIUtility.systemCopyBuffer = GameScreens.ShareText(day, Score, dayNumber);
         screens.SetShareLabel("KOPYALANDI");
+    }
+
+    private void OnShareResult(string result)
+    {
+        string label = BridgeMessages.ShareResultLabel(result);
+        if (label != null) screens.FlashShareLabel(label, ShareLabelSeconds);
+    }
+
+    private void Announce(string text)
+    {
+        if (bridge != null) bridge.Announce(text);
     }
 
     // Kept on the device (Nadide: the streak continues when today or yesterday was played).
@@ -339,9 +443,55 @@ public class QuizGameController : MonoBehaviour
         return streak;
     }
 
-    private void Fail(string error)
+    // ---------- errors ----------
+
+    private Action<string> FailThen(Action again)
+    {
+        return message => ShowError(message, again);
+    }
+
+    private void ShowError(string message, Action again)
     {
         busy = false;
-        Debug.LogWarning("Game session error: " + error);
+        var nadide = session as NadideGameSession;
+        LastFailure = NadideErrors.Classify(nadide != null ? nadide.LastErrorCode : null);
+        Debug.LogWarning("Game session error (" + LastFailure + "): " + message);
+        retry = LastFailure == SessionFailure.Restart ? (Action)RestartDay : again;
+        if (LastFailure == SessionFailure.BetaRequired && bridge != null) bridge.BetaRequired();
+
+        State = GameState.Error;
+        ui.SetAnswering(false);
+        if (bridge != null) bridge.HideAnswer();
+        screens.HideSuggestion();
+        string title = LastFailure == SessionFailure.BetaRequired ? "KAPALI BETA"
+            : LastFailure == SessionFailure.Restart ? "OTURUM KAPANDI" : "BAĞLANTI KOPTU";
+        screens.ShowError(title, message);
+    }
+
+    private void Retry()
+    {
+        if (State != GameState.Error) return;
+        screens.HideMoment();
+        Action again = retry;
+        retry = null;
+        State = GameState.Boot;
+        if (again != null) again();
+        else OpenHangar();
+    }
+
+    // The session is gone (expired, finished elsewhere, a new day): back to the Hangar with a fresh read.
+    private void RestartDay()
+    {
+        info = null;
+        prompt = null;
+        memo = null;
+        rows.Clear();
+        Score = 0;
+        ui.HideQuiz();
+        ui.SetHud(false);
+        ui.SetHeader(false);
+        screens.HideAll();
+        director.ResetToPad();
+        OpenHangar();
     }
 }

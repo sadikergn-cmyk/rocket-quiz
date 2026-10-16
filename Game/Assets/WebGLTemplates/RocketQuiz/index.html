@@ -59,7 +59,7 @@
         <h1>🚀 {{{ PRODUCT_NAME }}}</h1>
         <div id="bar"><div id="fill"></div></div>
         <div id="status">Yükleniyor</div>
-        <div id="tip">Az kişinin bildiği cevaplar roketi daha uzağa götürür: uzayın sınırı, yörünge, Ay, Satürn… ve Andromeda.</div>
+        <div id="tip">Az kişinin aklına gelen cevaplar roketi dış gezegenlere taşır: Merkür, Mars, Satürn… ve Neptün. Ay ise bir tuzak.</div>
       </div>
       <div id="error" role="alert"></div>
     </div>
@@ -103,7 +103,30 @@
         window.visualViewport.addEventListener("scroll", followKeyboard);
       }
 
-      // API used by Assets/Plugins/WebGL/RocketQuizWeb.jslib.
+      // Standalone share (the Nadide host formats its own text and card): payload -> short text, like the game's.
+      var MARKS = { mercury: "🟤", venus: "🟡", earth: "🌍", mars: "🔴", jupiter: "🟠", saturn: "🪐", uranus: "🟢", neptune: "🔵", trap_moon: "🌙" };
+      function shareText(data) {
+        var marks = (data.tiers || []).map(function (tier) { return MARKS[tier] || "☀️"; }).join(" ");
+        var total = typeof data.total === "number" ? data.total.toLocaleString("tr-TR") : "0";
+        return "RocketQuiz #" + (data.dayNumber || 0) + " · " + total + " ✦ (tahmini)\n" + marks + "\n" + location.origin + location.pathname;
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { send("OnWebShareResult", "copied"); },
+            function () { send("OnWebShareResult", "failed"); });
+        } else {
+          send("OnWebShareResult", "failed");
+        }
+      }
+
+      function reportReducedMotion() {
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        send("OnWebReducedMotion", reduce ? "1" : "0");
+      }
+
+      // API used by Assets/Plugins/WebGL/RocketQuizWeb.jslib (bridge contract v1, same as the Nadide host).
       window.RQ = {
         ready: function () { reportSafeArea(); },
         showAnswer: function (placeholder) {
@@ -120,6 +143,26 @@
         clearAnswer: function () {
           field.value = "";
         },
+        share: function (json) {
+          var data = {};
+          try { data = JSON.parse(json) || {}; } catch (e) {}
+          var text = shareText(data);
+          if (!navigator.share) { copyText(text); return; }
+          navigator.share({ text: text }).then(
+            function () { send("OnWebShareResult", "shared"); },
+            function (e) {
+              if (e && e.name === "AbortError") send("OnWebShareResult", "cancelled");
+              else copyText(text);
+            });
+        },
+        announce: function (text) {
+          var live = document.querySelector("#live");
+          live.textContent = "";
+          // Cleared first so the same sentence twice is read twice.
+          setTimeout(function () { live.textContent = text; }, 50);
+        },
+        // The standalone page has no beta gate.
+        betaRequired: function () {},
       };
 
       form.addEventListener("submit", function (event) {
@@ -133,6 +176,10 @@
         send("OnWebVisibility", document.hidden ? "hidden" : "visible");
       });
       window.addEventListener("resize", reportSafeArea);
+      if (window.matchMedia) {
+        var motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        if (motionQuery.addEventListener) motionQuery.addEventListener("change", reportReducedMotion);
+      }
 
       // iOS: let Web Audio play even when the ringer switch is on silent.
       document.addEventListener("pointerdown", function () {
@@ -172,6 +219,7 @@
           unity = instance;
           window.rqUnity = instance;
           reportSafeArea();
+          reportReducedMotion();
           var loading = document.querySelector("#loading");
           loading.style.opacity = "0";
           setTimeout(function () { loading.style.display = "none"; }, 450);

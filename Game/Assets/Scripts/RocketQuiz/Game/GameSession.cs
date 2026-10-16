@@ -98,13 +98,15 @@ public class PromptProgress
 }
 
 // GET /api/play/state: today's game as the server sees it, without creating one (the Hangar opens on this).
-// The server does not send dayNumber or secondsPerPrompt here; those come with play/start.
+// secondsPerPrompt is not sent here; it comes with play/start.
 [Serializable]
 public class PlayState
 {
     // "not_started" | "in_progress" | "finished"
     public string status;
     public string date;
+    // Day number of `date` (the Hangar's "#N"), in every status since krillion-tr #133; 0 from older servers.
+    public int dayNumber;
     // Null for "not_started".
     public ProgressView progress;
     // The prompt on screen (shown, waiting for an answer or a confirmation); null when there is none.

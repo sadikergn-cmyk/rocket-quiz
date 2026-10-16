@@ -67,8 +67,8 @@ public static class DayProgress
         return total;
     }
 
-    // play/state carries no day number. The Hangar shows the last one play/start gave, moved by whole days (the
-    // server numbers consecutive days); 0 (unknown, not shown) before the first game on this device.
+    // Fallback for servers whose play/state has no day number (before krillion-tr #133): the last one the server gave,
+    // moved by whole days (the server numbers consecutive days); 0 (unknown, not shown) before the first game here.
     public static int EstimateDayNumber(string date, string knownDate, int knownNumber)
     {
         DateTime day;

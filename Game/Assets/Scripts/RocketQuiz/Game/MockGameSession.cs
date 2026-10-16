@@ -64,6 +64,11 @@ public class MockGameSession : IGameSession
         get { return frozen ? frozenLeft : Mathf.Max(0f, seconds - (Time.realtimeSinceStartup - shownAt)); }
     }
 
+    private int DayNumber
+    {
+        get { return (today - new DateTime(2026, 1, 1)).Days + 1; }
+    }
+
     public void State(Action<PlayState> done, Action<string> fail)
     {
         bool started = open || progress.answered > 0;
@@ -71,6 +76,7 @@ public class MockGameSession : IGameSession
         {
             status = !started ? "not_started" : progress.finished ? "finished" : "in_progress",
             date = today.ToString("yyyy-MM-dd"),
+            dayNumber = DayNumber,
             progress = started ? Copy(progress) : null,
             current = open ? View() : null,
         });
@@ -86,7 +92,7 @@ public class MockGameSession : IGameSession
         }
         done(new SessionInfo
         {
-            dayNumber = (today - new DateTime(2026, 1, 1)).Days + 1,
+            dayNumber = DayNumber,
             date = today.ToString("yyyy-MM-dd"),
             status = progress.finished ? "finished" : "in_progress",
             resumed = progress.answered > 0,

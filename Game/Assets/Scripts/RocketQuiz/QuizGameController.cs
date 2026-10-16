@@ -154,8 +154,9 @@ public class QuizGameController : MonoBehaviour
                 return;
             }
             int total = day.progress != null && day.progress.total > 0 ? day.progress.total : MockGameSession.PromptsPerDay;
-            screens.ShowHangar(DayProgress.EstimateDayNumber(day.date), day.date, day.progress, total,
-                Mathf.RoundToInt(MockGameSession.SecondsPerPrompt));
+            DayProgress.RememberDayNumber(day.date, day.dayNumber);
+            int dayNumber = day.dayNumber > 0 ? day.dayNumber : DayProgress.EstimateDayNumber(day.date);
+            screens.ShowHangar(dayNumber, day.date, day.progress, total, Mathf.RoundToInt(MockGameSession.SecondsPerPrompt));
         }, FailThen(OpenHangar));
     }
 

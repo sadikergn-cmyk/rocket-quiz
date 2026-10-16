@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#05060a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>RocketQuiz</title>
+    <style>
+      @font-face { font-family: "RQ Body"; src: url("fonts/SpaceGrotesk-Medium.ttf") format("truetype"); font-display: swap; }
+      @font-face { font-family: "RQ Display"; src: url("fonts/Unbounded-Bold.ttf") format("truetype"); font-display: swap; }
+      :root {
+        --ignition: #ff761f; --ignition-deep: #db3d0d; --glass: rgba(16, 23, 38, 0.92);
+        --line: rgba(158, 199, 255, 0.35); --text: #f5f7ff; --muted: #808ea8;
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; overscroll-behavior: none; background: #05060a; }
+      body { display: flex; align-items: center; justify-content: center; font-family: "RQ Body", system-ui, sans-serif; color: var(--text); -webkit-tap-highlight-color: transparent; }
+      #frame { position: relative; width: 100%; height: 100%; }
+      #unity-canvas { display: block; width: 100%; height: 100%; background: #05060a; outline: none; touch-action: none; }
+      @media (min-aspect-ratio: 10/16) {
+        /* Desktop / landscape: keep the portrait 9:16 frame centred. */
+        #frame { width: calc(100dvh * 9 / 16); }
+      }
+
+      /* Loading screen */
+      #loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: radial-gradient(ellipse at 50% 120%, #1a2440 0%, #05060a 62%); transition: opacity 0.45s; z-index: 5; }
+      #loading h1 { margin: 0; font-family: "RQ Display", system-ui, sans-serif; font-size: 30px; letter-spacing: 0.04em; }
+      #bar { width: 62%; max-width: 280px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+      #fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--ignition-deep), #ffc46b); transition: width 0.2s; }
+      #status { font-size: 12px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+      #tip { position: absolute; bottom: calc(40px + var(--safe-bottom)); left: 24px; right: 24px; text-align: center; font-size: 14px; line-height: 1.45; color: var(--muted); }
+
+      /* HTML answer bar: native keyboard on iOS/Android, always kept above the keyboard. */
+      #answer { position: absolute; left: 4.45%; right: 4.45%; bottom: calc(2.5% + var(--safe-bottom)); display: none; gap: 10px; z-index: 4; transition: transform 0.12s ease-out; }
+      #answer.visible { display: flex; }
+      #answer input { flex: 1; min-width: 0; height: 56px; box-sizing: border-box; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(26, 36, 56, 0.94), var(--glass)); color: var(--text); font: 500 18px "RQ Body", system-ui, sans-serif; outline: none; -webkit-appearance: none; appearance: none; }
+      #answer input::placeholder { color: var(--muted); }
+      #answer input:focus { border-color: rgba(255, 140, 70, 0.8); box-shadow: 0 0 0 3px rgba(255, 118, 31, 0.18); }
+      #answer button { flex: 0 0 auto; height: 56px; padding: 0 20px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 14px; background: linear-gradient(180deg, var(--ignition), var(--ignition-deep)); color: #fff; font: 700 15px "RQ Display", system-ui, sans-serif; letter-spacing: 0.06em; box-shadow: 0 0 22px rgba(255, 118, 31, 0.45); touch-action: manipulation; cursor: pointer; }
+      #answer button:active { transform: scale(0.97); filter: brightness(0.9); }
+
+      #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #05060a; z-index: 10; font-size: 16px; color: var(--muted); }
+      @media (orientation: landscape) and (max-height: 520px) { #rotate { display: flex; } }
+      #error { position: absolute; left: 16px; right: 16px; top: 16px; display: none; padding: 12px; border-radius: 8px; background: #b3261e; font-size: 14px; z-index: 6; }
+      #safe-probe { position: fixed; top: 0; left: 0; visibility: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+      #live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    </style>
+  </head>
+  <body>
+    <div id="frame">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <form id="answer" autocomplete="off">
+        <input id="answer-input" type="text" inputmode="text" enterkeyhint="go" autocapitalize="words" autocomplete="off" autocorrect="off" spellcheck="false" lang="tr" maxlength="40" aria-label="Cevabın">
+        <button type="submit">FIRLAT</button>
+      </form>
+      <div id="loading">
+        <h1>🚀 RocketQuiz</h1>
+        <div id="bar"><div id="fill"></div></div>
+        <div id="status">Yükleniyor</div>
+        <div id="tip">Az kişinin bildiği cevaplar roketi daha uzağa götürür: uzayın sınırı, yörünge, Ay, Satürn… ve Andromeda.</div>
+      </div>
+      <div id="error" role="alert"></div>
+    </div>
+    <div id="rotate">Telefonu dik tut 📱</div>
+    <div id="safe-probe"></div>
+    <div id="live" aria-live="polite"></div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var errorBox = document.querySelector("#error");
+      var form = document.querySelector("#answer");
+      var field = document.querySelector("#answer-input");
+      var unity = null;
+
+      function showBanner(msg, type) {
+        if (type !== "error") { console.warn(msg); return; }
+        errorBox.textContent = msg;
+        errorBox.style.display = "block";
+      }
+
+      function send(method, value) {
+        if (unity) unity.SendMessage("WebBridge", method, value);
+      }
+
+      // Safe-area insets as fractions of the viewport height (Unity cannot read env()).
+      function reportSafeArea() {
+        var probe = document.querySelector("#safe-probe");
+        var style = getComputedStyle(probe);
+        var h = window.innerHeight || 1;
+        send("OnWebSafeArea", (parseFloat(style.paddingTop) / h).toFixed(4) + "," + (parseFloat(style.paddingBottom) / h).toFixed(4));
+      }
+
+      // Keep the answer bar above the on-screen keyboard (iOS only shrinks the visual viewport).
+      function followKeyboard() {
+        var vv = window.visualViewport;
+        if (!vv) return;
+        var covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        form.style.transform = covered > 0 ? "translateY(" + (-covered) + "px)" : "";
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", followKeyboard);
+        window.visualViewport.addEventListener("scroll", followKeyboard);
+      }
+
+      // API used by Assets/Plugins/WebGL/RocketQuizWeb.jslib.
+      window.RQ = {
+        ready: function () { reportSafeArea(); },
+        showAnswer: function (placeholder) {
+          field.value = "";
+          field.placeholder = placeholder;
+          form.classList.add("visible");
+          // Desktop: focus right away. Phones open the keyboard only after a tap.
+          if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) field.focus();
+        },
+        hideAnswer: function () {
+          field.blur();
+          form.classList.remove("visible");
+        },
+        clearAnswer: function () {
+          field.value = "";
+        },
+      };
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var value = field.value.trim();
+        if (value.length === 0) { field.focus(); return; }
+        send("OnWebAnswer", value);
+      });
+
+      document.addEventListener("visibilitychange", function () {
+        send("OnWebVisibility", document.hidden ? "hidden" : "visible");
+      });
+      window.addEventListener("resize", reportSafeArea);
+
+      // iOS: let Web Audio play even when the ringer switch is on silent.
+      document.addEventListener("pointerdown", function () {
+        if (navigator.audioSession) { try { navigator.audioSession.type = "playback"; } catch (e) {} }
+      }, { once: true });
+
+      var buildUrl = "Build";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/067664254ead2ed0ae0ebf9b508b0c8d.data.unityweb",
+        frameworkUrl: buildUrl + "/aa8c6d0cbb3a7b04ed86bf294ecb9115.framework.js.unityweb",
+        codeUrl: buildUrl + "/3491b772d5cdd047611061a492f9f04a.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "RocketQuiz",
+        productVersion: "0.1.0",
+        showBanner: showBanner,
+        // Phones report 3x pixel ratios; 2x keeps the frame rate up with little visible loss.
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      };
+
+      var script = document.createElement("script");
+      script.src = buildUrl + "/5e2747c1d44205fef0da87a1d9c938d2.loader.js";
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {
+          document.querySelector("#fill").style.width = Math.round(100 * progress) + "%";
+          if (progress >= 0.9) document.querySelector("#status").textContent = "Başlatılıyor";
+        }).then(function (instance) {
+          unity = instance;
+          window.rqUnity = instance;
+          reportSafeArea();
+          var loading = document.querySelector("#loading");
+          loading.style.opacity = "0";
+          setTimeout(function () { loading.style.display = "none"; }, 450);
+        }).catch(function (message) {
+          showBanner(String(message), "error");
+        });
+      };
+      script.onerror = function () { showBanner("Oyun dosyaları yüklenemedi. Bağlantını kontrol edip sayfayı yenile.", "error"); };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
